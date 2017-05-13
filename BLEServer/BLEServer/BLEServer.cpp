@@ -123,16 +123,15 @@ int main(Array<String^>^ args) {
 		return -1;
 	}
 
+	stdext::cvt::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
 	while (1) {
 		unsigned int len = 0;
 		std::cin.read(reinterpret_cast<char *>(&len), 4);
 		if (len > 0) {
 			char *msgBuf = new char[len];
 			std::cin.read(msgBuf, len);
-			std::string msgStr(msgBuf);
+			String^ jsonStr = ref new String(convert.from_bytes(msgBuf, msgBuf+len).c_str());
 			delete[] msgBuf;
-			stdext::cvt::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
-			String^ jsonStr = ref new String(convert.from_bytes(msgStr).c_str());
 			JsonObject^ json = JsonObject::Parse(jsonStr);
 			processCommand(json);
 		}
