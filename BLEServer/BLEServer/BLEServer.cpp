@@ -92,7 +92,18 @@ Concurrency::task<IJsonValue^> disconnectRequest(JsonObject ^command) {
 		throw ref new FailureException(ref new String(L"Device not found"));
 	}
 	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
+
+	// When disconnecting from a device, also remove all the characteristics from our cache.
+	auto newCharacteristicsMap = ref new Collections::Map<String^, Bluetooth::GenericAttributeProfile::GattCharacteristic^>();
+	for (auto pair : characteristicsMap)
+	{
+		if (!pair->Value->Service->Device->Equals(device)) {
+			newCharacteristicsMap->Insert(pair->Key, pair->Value);
+		}
+	}
+	characteristicsMap = newCharacteristicsMap;
 	devices->Remove(deviceId);
+
 	return Concurrency::task_from_result<IJsonValue^>(JsonValue::CreateNullValue());
 }
 
