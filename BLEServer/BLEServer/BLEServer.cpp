@@ -55,7 +55,7 @@ Guid parseUuid(String^ uuid) {
 	else {
 		std::wstring msg = L"Invalid UUID: ";
 		msg += uuid->Data();
-		throw ref new Platform::InvalidArgumentException(ref new Platform::String(msg.c_str()));
+		throw ref new InvalidArgumentException(ref new String(msg.c_str()));
 	}
 }
 
@@ -79,7 +79,7 @@ concurrency::task<IJsonValue^> connectRequest(JsonObject ^command) {
 	unsigned long long address = std::stoull(addressStr->Data(), 0, 16);
 	auto device = co_await Bluetooth::BluetoothLEDevice::FromBluetoothAddressAsync(address);
 	if (device == nullptr) {
-		throw ref new Platform::FailureException(ref new Platform::String(L"Device not found (null)"));
+		throw ref new FailureException(ref new String(L"Device not found (null)"));
 	}
 	devices->Insert(device->DeviceId, device);
 	return JsonValue::CreateStringValue(device->DeviceId);
@@ -89,7 +89,7 @@ concurrency::task<Bluetooth::GenericAttributeProfile::GattDeviceServicesResult^>
 	String ^deviceId = command->GetNamedString("device", "");
 	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
 	if (device == nullptr) {
-		throw ref new Platform::FailureException(ref new Platform::String(L"Device not found"));
+		throw ref new FailureException(ref new String(L"Device not found"));
 	}
 	if (command->HasKey("service")) {
 		return co_await device->GetGattServicesForUuidAsync(parseUuid(command->GetNamedString("service")));
@@ -110,12 +110,12 @@ concurrency::task<IJsonValue^> servicesRequest(JsonObject ^command) {
 
 concurrency::task<IJsonValue^> charactersticsRequest(JsonObject ^command) {
 	if (!command->HasKey("service")) {
-		throw ref new Platform::InvalidArgumentException(ref new Platform::String(L"Service uuid must be provided"));
+		throw ref new InvalidArgumentException(ref new String(L"Service uuid must be provided"));
 	}
 	auto servicesResult = co_await findServices(command);
 	auto services = servicesResult->Services;
 	if (services->Size == 0) {
-		throw ref new Platform::FailureException(ref new Platform::String(L"Requested service not found"));
+		throw ref new FailureException(ref new String(L"Requested service not found"));
 	}
 	auto service = services->GetAt(0);
 	auto characteristicsResult = co_await service->GetCharacteristicsAsync();
@@ -162,12 +162,11 @@ concurrency::task<void> processCommand(JsonObject ^command) {
 	JsonObject^ response = ref new JsonObject();
 	IJsonValue^ result = nullptr;
 	response->Insert("_type", JsonValue::CreateStringValue("response"));
-	response->Insert("id", JsonValue::CreateStringValue(command->GetNamedString("_id", "")));
+	response->Insert("_id", command->GetNamedValue("_id", JsonValue::CreateNullValue()));
 
 	try {
 		if (cmd->Equals("ping")) {
-			response->Insert("result", JsonValue::CreateStringValue("pong"));
-			writeObject(response);
+			result = JsonValue::CreateStringValue("pong");
 		}
 
 		if (cmd->Equals("scan")) {
@@ -200,16 +199,16 @@ concurrency::task<void> processCommand(JsonObject ^command) {
 			response->Insert("result", result);
 		}
 		else {
-			response->Insert("_error", JsonValue::CreateStringValue("Unknown command"));
+			response->Insert("error", JsonValue::CreateStringValue("Unknown command"));
 		}
 		writeObject(response);
 	}
-	catch (Platform::Exception^ e) {
-		response->Insert("_error", JsonValue::CreateStringValue(e->ToString()));
+	catch (Exception^ e) {
+		response->Insert("error", JsonValue::CreateStringValue(e->ToString()));
 		writeObject(response);
 	}
 	catch (...) {
-		response->Insert("_error", JsonValue::CreateStringValue("Unknown error"));
+		response->Insert("error", JsonValue::CreateStringValue("Unknown error"));
 		writeObject(response);
 	}
 }
@@ -264,7 +263,7 @@ int main(Array<String^>^ args) {
 
 	stdext::cvt::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
 	try {
-		while (1) {
+		while (!std::cin.eof()) {
 			unsigned int len = 0;
 			std::cin.read(reinterpret_cast<char *>(&len), 4);
 
