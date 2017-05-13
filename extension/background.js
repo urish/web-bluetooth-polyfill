@@ -8,4 +8,4 @@ port.onDisconnect.addListener(function () {
     console.log("Disconnected!", chrome.runtime.lastError.message);
 });
 
-port.postMessage({ "cmd": "helloWorld" });
+port.postMessage({ "cmd": "ping" });

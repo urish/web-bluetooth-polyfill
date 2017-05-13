@@ -20,10 +20,15 @@
 #include <pplawait.h>
 #include <cvt/wstring>
 #include <codecvt>
+#include <stdio.h>  
+#include <fcntl.h>  
+#include <io.h>  
 
 using namespace Platform;
 using namespace Windows::Devices;
 using namespace Windows::Data::Json;
+
+Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher^ bleAdvertisementWatcher;
 
 std::wstring formatBluetoothAddress(unsigned long long BluetoothAddress) {
 	std::wostringstream ret;
@@ -52,6 +57,24 @@ void writeObject(JsonObject^ jsonObject) {
 	std::cout << stringUtf8 << std::flush;
 }
 
+void processCommand(JsonObject ^command) {
+	String ^cmd = command->GetNamedString("cmd", "");
+
+	if (cmd->Equals("ping")) {
+		JsonObject^ msg = ref new JsonObject();
+		msg->Insert("_type", JsonValue::CreateStringValue("Pong"));
+		writeObject(msg);
+	}
+
+	if (cmd->Equals("scan")) {
+		bleAdvertisementWatcher->Start();
+	}
+	
+	if (cmd->Equals("stopScan")) {
+		bleAdvertisementWatcher->Stop();
+	}
+}
+
 int main(Array<String^>^ args) {
 	Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
 
@@ -66,10 +89,10 @@ int main(Array<String^>^ args) {
 		EOAC_NONE,
 		nullptr);
 
-	Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher^ bleAdvertisementWatcher = ref new Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher();
+	bleAdvertisementWatcher = ref new Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher();
 	bleAdvertisementWatcher->ScanningMode = Bluetooth::Advertisement::BluetoothLEScanningMode::Active;
 	bleAdvertisementWatcher->Received += ref new Windows::Foundation::TypedEventHandler<Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher ^, Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs ^>(
-		[bleAdvertisementWatcher](Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher ^watcher, Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs^ eventArgs) {
+		[](Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher ^watcher, Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs^ eventArgs) {
 		unsigned int index = -1;
 
 		JsonObject^ msg = ref new JsonObject();
@@ -82,7 +105,7 @@ int main(Array<String^>^ args) {
 		msg->Insert("localName", JsonValue::CreateStringValue(eventArgs->Advertisement->LocalName));
 
 		JsonArray^ serviceUuids = ref new JsonArray();
-		for (int i = 0; i < eventArgs->Advertisement->ServiceUuids->Size; i++) {
+		for (unsigned int i = 0; i < eventArgs->Advertisement->ServiceUuids->Size; i++) {
 			serviceUuids->Append(JsonValue::CreateStringValue(eventArgs->Advertisement->ServiceUuids->GetAt(i).ToString()));
 		}
 		msg->Insert("serviceUuids", serviceUuids);
@@ -90,14 +113,29 @@ int main(Array<String^>^ args) {
 		// TODO manfuacturer data / flags / data sections ?
 		writeObject(msg);
 	});
-	bleAdvertisementWatcher->Start();
 	
 	JsonObject^ msg = ref new JsonObject();
 	msg->Insert("_type", JsonValue::CreateStringValue("Start"));
 	writeObject(msg);
 
+	// Set STDIN / STDOUT to binary mode
+	if ((_setmode(0, _O_BINARY) == -1) || (_setmode(1, _O_BINARY) == -1)) {
+		return -1;
+	}
+
 	while (1) {
-		getchar();
+		unsigned int len = 0;
+		std::cin.read(reinterpret_cast<char *>(&len), 4);
+		if (len > 0) {
+			char *msgBuf = new char[len];
+			std::cin.read(msgBuf, len);
+			std::string msgStr(msgBuf);
+			delete[] msgBuf;
+			stdext::cvt::wstring_convert<std::codecvt_utf8<wchar_t>> convert;
+			String^ jsonStr = ref new String(convert.from_bytes(msgStr).c_str());
+			JsonObject^ json = JsonObject::Parse(jsonStr);
+			processCommand(json);
+		}
 	}
 
 	return 0;
