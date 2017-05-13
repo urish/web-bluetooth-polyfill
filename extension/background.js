@@ -6,13 +6,18 @@ let requests = {};
 async function nativeRequest(cmd, params) {
     return new Promise((resolve, reject) => {
         requests[requestId] = { resolve, reject };
-        nativePort.postMessage(Object.assign(params || {}, {
+        const msg = Object.assign(params || {}, {
             cmd,
             _id: requestId++
-        }));
+        });
+        if (debugPrints) {
+            console.log('Sent native message:', msg);
+        }
+        nativePort.postMessage(msg);
     });
 }
 
+const subscriptions = {};
 nativePort.onMessage.addListener((msg) => {
     if (debugPrints) {
         console.log('Received native message:', msg);
@@ -25,6 +30,12 @@ nativePort.onMessage.addListener((msg) => {
             resolve(msg.result);
         }
         delete requests[msg._id];
+    }
+    if (msg._type === 'valueChangedNotification') {
+        const subscriber = subscriptions[msg.subscriptionId];
+        if (subscriber) {
+            chrome.tabs.sendMessage(subscriber.id, msg);
+        }
     }
 });
 
@@ -88,7 +99,7 @@ function matchDeviceFilter(filter, device) {
 }
 
 let scanning = false;
-async function requestDevice(options) {
+async function requestDevice(sender, options) {
     if (!options.filters) {
         // TODO better filters validation, proper error message
         throw new Error('Filters must be provided');
@@ -99,6 +110,7 @@ async function requestDevice(options) {
         if (msg._type === 'scanResult' && deviceFoundCallback) {
             if (options.acceptAllDevices ||
                 options.filters.some(filter => matchDeviceFilter(filter, msg))) {
+                nativeRequest('stopScan');
                 deviceFoundCallback(msg);
             }
         }
@@ -117,19 +129,19 @@ async function requestDevice(options) {
     };
 }
 
-async function gattConnect(address) {
+async function gattConnect(sender, address) {
     return await nativeRequest('connect', { address: address.replace(/:/g, '') });
 }
 
-async function gattDisconnect(gattId) {
+async function gattDisconnect(sender, gattId) {
     return await nativeRequest('disconnect', { device: gattId });
 }
 
-async function getPrimaryService(gattId, service) {
-    return (await getPrimaryServices(gattId, service))[0];
+async function getPrimaryService(sender, gattId, service) {
+    return (await getPrimaryServices(sender, gattId, service))[0];
 }
 
-async function getPrimaryServices(gattId, service) {
+async function getPrimaryServices(sender, gattId, service) {
     let options = { device: gattId };
     if (service) {
         options.service = windowsUuid(service);
@@ -137,19 +149,29 @@ async function getPrimaryServices(gattId, service) {
     return await nativeRequest('services', options);
 }
 
-async function getCharacteristic(gattId, service, characteristic) {
-    return (await getCharacteristics(gattId, service, characteristic))[0];
-}
-
-async function getCharacteristics(gattId, service, characteristic) {
-    let options = { device: gattId, service: windowsUuid(service) };
-    if (characteristic) {
-        options.characteristic = windowsUuid(characteristic);
+async function getCharacteristic(sender, gattId, service, characteristic) {
+    const char = (await getCharacteristics(sender, gattId, service, characteristic)).find(x => true);
+    if (!char) {
+        throw new Error(`Characteristic ${characteristic} not found`);
     }
-    return await nativeRequest('characteristics', options);
+    return char;
 }
 
-async function readValue(gattId, service, characteristic) {
+const charCache = {};
+async function getCharacteristics(sender, gattId, service, characteristic) {
+    const key = `${gattId}/${service}`;
+    if (!charCache[key]) {
+        charCache[key] = await nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
+    }
+    const result = charCache[key];
+    if (characteristic) {
+        return result.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
+    } else {
+        return result;
+    }
+}
+
+async function readValue(sender, gattId, service, characteristic) {
     return await nativeRequest('read', {
         device: gattId,
         service: windowsUuid(service),
@@ -157,7 +179,7 @@ async function readValue(gattId, service, characteristic) {
     });
 }
 
-async function writeValue(gattId, service, characteristic, value) {
+async function writeValue(sender, gattId, service, characteristic, value) {
     if (!(value instanceof Array) || !value.every(item => typeof item === 'number')) {
         throw new Error('Invalid argument: value');
     }
@@ -166,8 +188,19 @@ async function writeValue(gattId, service, characteristic, value) {
         device: gattId,
         service: windowsUuid(service),
         characteristic: windowsUuid(characteristic),
-        data: value
+        value
     });
+}
+
+async function startNotifications(sender, gattId, service, characteristic) {
+    const subscriptionId = await nativeRequest('subscribe', {
+        device: gattId,
+        service: windowsUuid(service),
+        characteristic: windowsUuid(characteristic)
+    });
+
+    subscriptions[subscriptionId] = sender.tab;
+    return subscriptionId;
 }
 
 const exportedMethods = {
@@ -179,7 +212,8 @@ const exportedMethods = {
     getCharacteristic,
     getCharacteristics,
     readValue,
-    writeValue
+    writeValue,
+    startNotifications
 };
 
 chrome.runtime.onMessage.addListener(
@@ -192,7 +226,7 @@ chrome.runtime.onMessage.addListener(
         }
         const fn = exportedMethods[request.command];
         if (fn) {
-            fn(...request.args)
+            fn(sender, ...request.args)
                 .then(result => sendResponse({ result }))
                 .catch(error => sendResponse({ error: error.toString() }))
             return true;

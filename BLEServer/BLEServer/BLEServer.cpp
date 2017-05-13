@@ -30,6 +30,7 @@ using namespace Windows::Data::Json;
 
 Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher^ bleAdvertisementWatcher;
 auto devices = ref new Collections::Map<String^, Bluetooth::BluetoothLEDevice^>();
+auto characteristicsMap = ref new Collections::Map<String^, Bluetooth::GenericAttributeProfile::GattCharacteristic^>();
 
 std::wstring formatBluetoothAddress(unsigned long long BluetoothAddress) {
 	std::wostringstream ret;
@@ -87,26 +88,35 @@ concurrency::task<IJsonValue^> connectRequest(JsonObject ^command) {
 
 Concurrency::task<IJsonValue^> disconnectRequest(JsonObject ^command) {
 	String ^deviceId = command->GetNamedString("device", "");
-	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
-	if (device == nullptr) {
+	if (!devices->HasKey(deviceId)) {
 		throw ref new FailureException(ref new String(L"Device not found"));
 	}
+	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
 	devices->Remove(deviceId);
 	return Concurrency::task_from_result<IJsonValue^>(JsonValue::CreateNullValue());
 }
 
 concurrency::task<Bluetooth::GenericAttributeProfile::GattDeviceServicesResult^> findServices(JsonObject ^command) {
 	String ^deviceId = command->GetNamedString("device", "");
-	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
-	if (device == nullptr) {
+	if (!devices->HasKey(deviceId)) {
 		throw ref new FailureException(ref new String(L"Device not found"));
 	}
+	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
 	if (command->HasKey("service")) {
 		return co_await device->GetGattServicesForUuidAsync(parseUuid(command->GetNamedString("service")));
 	}
 	else {
 		return co_await device->GetGattServicesAsync();
 	}
+}
+
+String^ characteristicKey(String^ device, String^ service, String^ characteristic) {
+	std::wstring result = device->Data();
+	result += L"//";
+	result += service->Data();
+	result += L"//";
+	result += characteristic->Data();
+	return ref new String(result.c_str());
 }
 
 concurrency::task<Bluetooth::GenericAttributeProfile::GattCharacteristicsResult^> findCharacteristics(JsonObject ^command) {
@@ -119,24 +129,30 @@ concurrency::task<Bluetooth::GenericAttributeProfile::GattCharacteristicsResult^
 		throw ref new FailureException(ref new String(L"Requested service not found"));
 	}
 	auto service = services->GetAt(0);
-	if (command->HasKey("characteristic")) {
-		return co_await service->GetCharacteristicsForUuidAsync(parseUuid(command->GetNamedString("characteristic")));
+	auto results = co_await service->GetCharacteristicsAsync();
+	for (unsigned int i = 0; i < results->Characteristics->Size; i++) {
+		auto characteristic = results->Characteristics->GetAt(i);
+		auto key = characteristicKey(command->GetNamedString("device"), command->GetNamedString("service"), characteristic->Uuid.ToString());
+		characteristicsMap->Insert(key, characteristic);
 	}
-	else {
-		return co_await service->GetCharacteristicsAsync();
-	}
+	return results;
 }
 
 concurrency::task<Bluetooth::GenericAttributeProfile::GattCharacteristic^> getCharacteristic(JsonObject ^command) {
 	if (!command->HasKey("characteristic")) {
 		throw ref new InvalidArgumentException(ref new String(L"Characteristic uuid must be provided"));
 	}
-	auto characteristicsResult = co_await findCharacteristics(command);
-	auto characteristics = characteristicsResult->Characteristics;
-	if (characteristics->Size == 0) {
-		throw ref new FailureException(ref new String(L"Requested characteristic not found"));
+
+	auto key = characteristicKey(command->GetNamedString("device"), command->GetNamedString("service"), command->GetNamedString("characteristic"));
+	if (!characteristicsMap->HasKey(key)) {
+		co_await findCharacteristics(command);
 	}
-	return characteristics->GetAt(0);
+
+	if (characteristicsMap->HasKey(key)) {
+		return characteristicsMap->Lookup(key);
+	}
+
+	throw ref new FailureException(ref new String(L"Requested characteristic not found"));
 }
 
 concurrency::task<IJsonValue^> servicesRequest(JsonObject ^command) {
@@ -189,7 +205,7 @@ concurrency::task<IJsonValue^> readRequest(JsonObject ^command) {
 concurrency::task<IJsonValue^> writeRequest(JsonObject ^command) {
 	auto characteristic = co_await getCharacteristic(command);
 	auto writer = ref new Windows::Storage::Streams::DataWriter();
-	auto dataArray = command->GetNamedArray("data");
+	auto dataArray = command->GetNamedArray("value");
 	for (unsigned int i = 0; i < dataArray->Size; i++) {
 		writer->WriteByte((unsigned char)dataArray->GetNumberAt(i));
 	}
@@ -202,6 +218,35 @@ concurrency::task<IJsonValue^> writeRequest(JsonObject ^command) {
 	}
 
 	return JsonValue::CreateNullValue();
+}
+
+unsigned long nextSubscriptionId = 1;
+
+concurrency::task<IJsonValue^> subscribeRequest(JsonObject ^command) {
+	auto characteristic = co_await getCharacteristic(command);
+	unsigned long subscriptionId = nextSubscriptionId++;
+
+	auto status = co_await characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(Bluetooth::GenericAttributeProfile::GattClientCharacteristicConfigurationDescriptorValue::Notify);
+	if (status != Bluetooth::GenericAttributeProfile::GattCommunicationStatus::Success)
+	{
+		throw ref new FailureException(status.ToString());
+	}
+
+	characteristic->ValueChanged += ref new Windows::Foundation::TypedEventHandler<Bluetooth::GenericAttributeProfile::GattCharacteristic^, Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs ^>(
+		[subscriptionId](Bluetooth::GenericAttributeProfile::GattCharacteristic^ characteristic, Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs^ eventArgs) {
+		JsonObject^ msg = ref new JsonObject();
+		msg->Insert("_type", JsonValue::CreateStringValue("valueChangedNotification"));
+		msg->Insert("subscriptionId", JsonValue::CreateNumberValue(subscriptionId));
+		auto reader = Windows::Storage::Streams::DataReader::FromBuffer(eventArgs->CharacteristicValue);
+		auto valueArray = ref new JsonArray();
+		for (unsigned int i = 0; i < eventArgs->CharacteristicValue->Length; i++) {
+			valueArray->Append(JsonValue::CreateNumberValue(reader->ReadByte()));
+		}
+		msg->Insert("value", valueArray);
+		writeObject(msg);
+	});
+	
+	return JsonValue::CreateNumberValue(subscriptionId);
 }
 
 concurrency::task<void> processCommand(JsonObject ^command) {
@@ -248,6 +293,10 @@ concurrency::task<void> processCommand(JsonObject ^command) {
 
 		if (cmd->Equals("write")) {
 			result = co_await writeRequest(command);
+		}
+
+		if (cmd->Equals("subscribe")) {
+			result = co_await subscribeRequest(command);
 		}
 
 		if (result != nullptr) {

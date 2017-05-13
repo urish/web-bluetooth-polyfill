@@ -10,6 +10,13 @@ window.addEventListener('message', event => {
     }
 }, false);
 
+chrome.runtime.onMessage.addListener(msg => {
+    // TODO propagate origin to background.js
+    window.postMessage(Object.assign(msg, {
+        type: 'WebBluetoothPolyCSToPage'
+    }), '*');
+})
+
 // Inject the Polyfill
 
 var script = document.createElement('script');

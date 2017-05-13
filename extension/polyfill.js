@@ -3,9 +3,17 @@ if (!navigator.bluetooth) {
 
     (function () {
         const outstandingRequests = {};
+        const activeSubscriptions = {};
         let requestId = 0;
         window.addEventListener('message', event => {
             if (event.source === window && event.data && event.data.type === 'WebBluetoothPolyCSToPage') {
+                if (event.data.subscriptionId) {
+                    const subscription = activeSubscriptions[event.data.subscriptionId];
+                    if (subscription) {
+                        subscription(event.data);
+                    }
+                    return;
+                }
                 const request = outstandingRequests[event.data.id];
                 if (request) {
                     if (event.data.error) {
@@ -30,6 +38,7 @@ if (!navigator.bluetooth) {
             })
         }
 
+        // Implmentation reference: https://developer.mozilla.org/en/docs/Web/API/EventTarget
         const listeners = Symbol('listeners');
         class BluetoothEventTarget {
             constructor() {
@@ -69,7 +78,7 @@ if (!navigator.bluetooth) {
             }
         }
 
-        // Implmentation reference: https://developer.mozilla.org/en/docs/Web/API/EventTarget
+        const subscriptionId = Symbol("subscriptionId");
         class BluetoothRemoteGATTCharacteristic extends BluetoothEventTarget {
             constructor(service, uuid, properties) {
                 super();
@@ -93,20 +102,31 @@ if (!navigator.bluetooth) {
 
             async readValue() {
                 const result = await callExtension('readValue', [this._connection, this.service.uuid, this.uuid]);
-                return new DataView(new Uint8Array(result).buffer);
+                this.value = new DataView(new Uint8Array(result).buffer);
+                return this.value;
             }
 
             async writeValue(value) {
-                await callExtension('writeValue', [this._connection, this.service.uuid, this.uuid, Array.from(value)]);
+                const byteValues = Array.from(new Uint8Array(value));
+                await callExtension('writeValue', [this._connection, this.service.uuid, this.uuid, byteValues]);
             }
 
             async startNotifications() {
-                // TODO implement
+                this[subscriptionId] = await callExtension('startNotifications', [this._connection, this.service.uuid, this.uuid]);
+                activeSubscriptions[this[subscriptionId]] = (event) => {
+                    this.value = new DataView(new Uint8Array(event.value).buffer);
+                    this.dispatchEvent({
+                        type: 'characteristicvaluechanged',
+                        bubbles: true
+                    });
+                };
                 return this;
             }
 
             async stopNotifications() {
                 // TODO implement
+                delete activeSubscriptions[this[subscriptionId]];
+                this[subscriptionId] = null;
                 return this;
             }
         }
