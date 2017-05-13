@@ -85,6 +85,16 @@ concurrency::task<IJsonValue^> connectRequest(JsonObject ^command) {
 	return JsonValue::CreateStringValue(device->DeviceId);
 }
 
+Concurrency::task<IJsonValue^> disconnectRequest(JsonObject ^command) {
+	String ^deviceId = command->GetNamedString("device", "");
+	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
+	if (device == nullptr) {
+		throw ref new FailureException(ref new String(L"Device not found"));
+	}
+	devices->Remove(deviceId);
+	return Concurrency::task_from_result<IJsonValue^>(JsonValue::CreateNullValue());
+}
+
 concurrency::task<Bluetooth::GenericAttributeProfile::GattDeviceServicesResult^> findServices(JsonObject ^command) {
 	String ^deviceId = command->GetNamedString("device", "");
 	Bluetooth::BluetoothLEDevice^ device = devices->Lookup(deviceId);
@@ -218,6 +228,10 @@ concurrency::task<void> processCommand(JsonObject ^command) {
 
 		if (cmd->Equals("connect")) {
 			result = co_await connectRequest(command);
+		}
+
+		if (cmd->Equals("disconnect")) {
+			result = co_await disconnectRequest(command);
 		}
 
 		if (cmd->Equals("services")) {

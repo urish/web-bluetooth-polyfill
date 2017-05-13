@@ -121,6 +121,10 @@ async function gattConnect(address) {
     return await nativeRequest('connect', { address: address.replace(/:/g, '') });
 }
 
+async function gattDisconnect(gattId) {
+    return await nativeRequest('disconnect', { device: gattId });
+}
+
 async function getPrimaryService(gattId, service) {
     return (await getPrimaryServices(gattId, service))[0];
 }
@@ -169,6 +173,7 @@ async function writeValue(gattId, service, characteristic, value) {
 const exportedMethods = {
     requestDevice,
     gattConnect,
+    gattDisconnect,
     getPrimaryService,
     getPrimaryServices,
     getCharacteristic,
