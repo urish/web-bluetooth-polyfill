@@ -1,4 +1,4 @@
-const nativePort = chrome.runtime.connectNative('org.urish.bluetooth.server');
+const nativePort = chrome.runtime.connectNative('org.urish.web_bluetooth.server');
 const debugPrints = false;
 
 let requestId = 0;
@@ -143,7 +143,7 @@ async function writeValue(gattId, service, characteristic, value) {
     if (!(value instanceof Array) || !value.every(item => typeof item === 'number')) {
         throw new Error('Invalid argument: value');
     }
-    
+
     return await nativeRequest('write', {
         device: gattId,
         service: windowsUuid(service),
