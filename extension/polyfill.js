@@ -92,8 +92,8 @@ if (!navigator.bluetooth) {
             }
 
             async readValue() {
-                // TODO implement
-                throw new Error('Not implemented');
+                const result = await callExtension('readValue', [this._connection, this.service.uuid, this.uuid]);
+                return new DataView(new Uint8Array(result).buffer);
             }
 
             async writeValue(value) {
@@ -117,18 +117,17 @@ if (!navigator.bluetooth) {
                 this.device = device;
                 this.uuid = uuid;
                 this.isPrimary = isPrimary;
+                Object.defineProperty(this, 'device', { enumerable: false });
             }
 
             async getCharacteristic(characteristic) {
-                let uuid = await callExtension('getCharacteristic', [this.device.gatt._connection, this.uuid, characteristic]);
-                // TODO properties
-                return new BluetoothRemoteGATTCharacteristic(this, uuid);
+                let { uuid, properties } = await callExtension('getCharacteristic', [this.device.gatt._connection, this.uuid, characteristic]);
+                return new BluetoothRemoteGATTCharacteristic(this, uuid, properties);
             }
 
             async getCharacteristics(characteristic) {
                 let result = await callExtension('getCharacteristics', [this.device.gatt._connection, this.uuid, characteristic]);
-                // TODO properties
-                return result.map(uuid => new BluetoothRemoteGATTCharacteristic(this, uuid));
+                return result.map(({ uuid, properties }) => new BluetoothRemoteGATTCharacteristic(this, uuid, properties));
             }
 
             async getIncludedService(service) {

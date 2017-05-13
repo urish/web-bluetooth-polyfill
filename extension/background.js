@@ -40,9 +40,15 @@ function leftPad(s, count, pad) {
 }
 
 function normalizeUuid(uuid) {
+    const origUuid = uuid;
     // TODO: complete this list
     var standardUuids = {
+        // characteristics
+        battery_level: 0x2a19,
+
+        // services
         heart_rate: 0x180d,
+        battery_service: 0x180f,
         cycling_power: 0x1818,
     }
     if (standardUuids[uuid]) {
@@ -58,7 +64,7 @@ function normalizeUuid(uuid) {
     if (/^{?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}}?$/.test(uuid)) {
         return uuid.replace('{', '').replace('}', '').toLowerCase();
     }
-    throw new Error(`Invalid UUID format: ${uuid}`);
+    throw new Error(`Invalid UUID format: ${origUuid}`);
 }
 
 function windowsUuid(uuid) {
@@ -139,6 +145,14 @@ async function getCharacteristics(gattId, service, characteristic) {
     return await nativeRequest('characteristics', options);
 }
 
+async function readValue(gattId, service, characteristic) {
+    return await nativeRequest('read', {
+        device: gattId,
+        service: windowsUuid(service),
+        characteristic: windowsUuid(characteristic)
+    });
+}
+
 async function writeValue(gattId, service, characteristic, value) {
     if (!(value instanceof Array) || !value.every(item => typeof item === 'number')) {
         throw new Error('Invalid argument: value');
@@ -159,6 +173,7 @@ const exportedMethods = {
     getPrimaryServices,
     getCharacteristic,
     getCharacteristics,
+    readValue,
     writeValue
 };
 
@@ -174,7 +189,7 @@ chrome.runtime.onMessage.addListener(
         if (fn) {
             fn(...request.args)
                 .then(result => sendResponse({ result }))
-                .catch(error => sendResponse({ error }))
+                .catch(error => sendResponse({ error: error.toString() }))
             return true;
         } else {
             sendResponse({ error: 'Unknown command: ' + request.command });

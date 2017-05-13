@@ -99,6 +99,36 @@ concurrency::task<Bluetooth::GenericAttributeProfile::GattDeviceServicesResult^>
 	}
 }
 
+concurrency::task<Bluetooth::GenericAttributeProfile::GattCharacteristicsResult^> findCharacteristics(JsonObject ^command) {
+	if (!command->HasKey("service")) {
+		throw ref new InvalidArgumentException(ref new String(L"Service uuid must be provided"));
+	}
+	auto servicesResult = co_await findServices(command);
+	auto services = servicesResult->Services;
+	if (services->Size == 0) {
+		throw ref new FailureException(ref new String(L"Requested service not found"));
+	}
+	auto service = services->GetAt(0);
+	if (command->HasKey("characteristic")) {
+		return co_await service->GetCharacteristicsForUuidAsync(parseUuid(command->GetNamedString("characteristic")));
+	}
+	else {
+		return co_await service->GetCharacteristicsAsync();
+	}
+}
+
+concurrency::task<Bluetooth::GenericAttributeProfile::GattCharacteristic^> getCharacteristic(JsonObject ^command) {
+	if (!command->HasKey("characteristic")) {
+		throw ref new InvalidArgumentException(ref new String(L"Characteristic uuid must be provided"));
+	}
+	auto characteristicsResult = co_await findCharacteristics(command);
+	auto characteristics = characteristicsResult->Characteristics;
+	if (characteristics->Size == 0) {
+		throw ref new FailureException(ref new String(L"Requested characteristic not found"));
+	}
+	return characteristics->GetAt(0);
+}
+
 concurrency::task<IJsonValue^> servicesRequest(JsonObject ^command) {
 	auto servicesResult = co_await findServices(command);
 	auto result = ref new JsonArray();
@@ -109,47 +139,54 @@ concurrency::task<IJsonValue^> servicesRequest(JsonObject ^command) {
 }
 
 concurrency::task<IJsonValue^> charactersticsRequest(JsonObject ^command) {
-	if (!command->HasKey("service")) {
-		throw ref new InvalidArgumentException(ref new String(L"Service uuid must be provided"));
-	}
-	auto servicesResult = co_await findServices(command);
-	auto services = servicesResult->Services;
-	if (services->Size == 0) {
-		throw ref new FailureException(ref new String(L"Requested service not found"));
-	}
-	auto service = services->GetAt(0);
-	auto characteristicsResult = co_await service->GetCharacteristicsAsync();
+	auto characteristicsResult = co_await findCharacteristics(command);
 	auto result = ref new JsonArray();
 	for (unsigned int i = 0; i < characteristicsResult->Characteristics->Size; i++) {
-		result->Append(JsonValue::CreateStringValue(characteristicsResult->Characteristics->GetAt(i)->Uuid.ToString()));
+		auto characteristic = characteristicsResult->Characteristics->GetAt(i);
+		auto characteristicJson = ref new JsonObject();
+		auto properties = ref new JsonObject();
+		auto props = (unsigned int)characteristic->CharacteristicProperties;
+		properties->SetNamedValue("broadcast", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Broadcast));
+		properties->SetNamedValue("read", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Read));
+		properties->SetNamedValue("writeWithoutResponse", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::WriteWithoutResponse));
+		properties->SetNamedValue("write", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Write));
+		properties->SetNamedValue("notify", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Notify));
+		properties->SetNamedValue("indicate", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Indicate));
+		properties->SetNamedValue("authenticatedSignedWrites", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::AuthenticatedSignedWrites));
+		properties->SetNamedValue("reliableWrite", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::ReliableWrites));
+		properties->SetNamedValue("writableAuxiliaries", JsonValue::CreateBooleanValue(props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::WritableAuxiliaries));
+		characteristicJson->SetNamedValue("uuid", JsonValue::CreateStringValue(characteristic->Uuid.ToString()));
+		characteristicJson->SetNamedValue("properties", properties);
+		result->Append(characteristicJson);
 	} 
 	return result;
 }
 
-concurrency::task<IJsonValue^> writeRequest(JsonObject ^command) {
-	if (!command->HasKey("service")) {
-		throw ref new InvalidArgumentException(ref new String(L"Service uuid must be provided"));
+concurrency::task<IJsonValue^> readRequest(JsonObject ^command) {
+	auto characteristic = co_await getCharacteristic(command);
+	auto result = co_await characteristic->ReadValueAsync();
+	if (result->Status != Bluetooth::GenericAttributeProfile::GattCommunicationStatus::Success) {
+		throw ref new FailureException(result->Status.ToString());
 	}
-	if (!command->HasKey("data")) {
-		throw ref new InvalidArgumentException(ref new String(L"Data must be provided"));
+	auto reader = Windows::Storage::Streams::DataReader::FromBuffer(result->Value);
+	auto valueArray = ref new JsonArray();
+	for (unsigned int i = 0; i < result->Value->Length; i++) {
+		valueArray->Append(JsonValue::CreateNumberValue(reader->ReadByte()));
 	}
-	auto servicesResult = co_await findServices(command);
-	auto services = servicesResult->Services;
-	if (services->Size == 0) {
-		throw ref new FailureException(ref new String(L"Requested service not found"));
-	}
-	auto service = services->GetAt(0);
-	auto characteristicsResult = co_await service->GetCharacteristicsAsync();
-	// TODO find correct characteristic
-	auto characteristic = characteristicsResult->Characteristics->GetAt(0);
+	return valueArray;
+}
 
+concurrency::task<IJsonValue^> writeRequest(JsonObject ^command) {
+	auto characteristic = co_await getCharacteristic(command);
 	auto writer = ref new Windows::Storage::Streams::DataWriter();
 	auto dataArray = command->GetNamedArray("data");
 	for (unsigned int i = 0; i < dataArray->Size; i++) {
 		writer->WriteByte((unsigned char)dataArray->GetNumberAt(i));
 	}
 
-	auto status = co_await characteristic->WriteValueAsync(writer->DetachBuffer(), Bluetooth::GenericAttributeProfile::GattWriteOption::WriteWithoutResponse);
+	bool writeWithoutResponse = (unsigned int)characteristic->CharacteristicProperties & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::WriteWithoutResponse;
+	auto writeType = writeWithoutResponse ? Bluetooth::GenericAttributeProfile::GattWriteOption::WriteWithoutResponse : Bluetooth::GenericAttributeProfile::GattWriteOption::WriteWithResponse;
+	auto status = co_await characteristic->WriteValueAsync(writer->DetachBuffer(), writeType);
 	if (status != Bluetooth::GenericAttributeProfile::GattCommunicationStatus::Success) {
 		throw ref new FailureException(status.ToString());
 	}
@@ -189,6 +226,10 @@ concurrency::task<void> processCommand(JsonObject ^command) {
 
 		if (cmd->Equals("characteristics")) {
 			result = co_await charactersticsRequest(command);
+		}
+
+		if (cmd->Equals("read")) {
+			result = co_await readRequest(command);
 		}
 
 		if (cmd->Equals("write")) {
