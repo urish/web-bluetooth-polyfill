@@ -1,5 +1,5 @@
 const nativePort = chrome.runtime.connectNative('org.urish.web_bluetooth.server');
-const debugPrints = false;
+let debugPrints = false;
 
 let requestId = 0;
 let requests = {};
@@ -40,6 +40,7 @@ nativePort.onMessage.addListener((msg) => {
 });
 
 let portsObjects = new WeakMap();
+const characteristicCache = {};
 
 nativePort.onDisconnect.addListener(() => {
     console.log("Disconnected!", chrome.runtime.lastError.message);
@@ -139,6 +140,7 @@ async function gattConnect(port, address) {
 
 async function gattDisconnect(port, gattId) {
     portsObjects.get(port).devices.delete(gattId);
+    delete characteristicCache[gattId];
     return await nativeRequest('disconnect', { device: gattId });
 }
 
@@ -162,13 +164,14 @@ async function getCharacteristic(port, gattId, service, characteristic) {
     return char;
 }
 
-const charCache = {};
 async function getCharacteristics(port, gattId, service, characteristic) {
-    const key = `${gattId}/${service}`;
-    if (!charCache[key]) {
-        charCache[key] = nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
+    if (!characteristicCache[gattId]) {
+        characteristicCache[gattId] = {};
     }
-    const result = await charCache[key];
+    if (!characteristicCache[gattId][service]) {
+        characteristicCache[gattId][service] = nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
+    }
+    const result = await characteristicCache[gattId][service];
     if (characteristic) {
         return result.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
     } else {
