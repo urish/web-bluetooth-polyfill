@@ -32,12 +32,14 @@ nativePort.onMessage.addListener((msg) => {
         delete requests[msg._id];
     }
     if (msg._type === 'valueChangedNotification') {
-        const subscriber = subscriptions[msg.subscriptionId];
-        if (subscriber) {
-            chrome.tabs.sendMessage(subscriber.id, msg);
+        const port = subscriptions[msg.subscriptionId];
+        if (port) {
+            port.postMessage(msg);
         }
     }
 });
+
+let portsObjects = new WeakMap();
 
 nativePort.onDisconnect.addListener(() => {
     console.log("Disconnected!", chrome.runtime.lastError.message);
@@ -99,7 +101,7 @@ function matchDeviceFilter(filter, device) {
 }
 
 let scanning = false;
-async function requestDevice(sender, options) {
+async function requestDevice(port, options) {
     if (!options.filters) {
         // TODO better filters validation, proper error message
         throw new Error('Filters must be provided');
@@ -129,19 +131,22 @@ async function requestDevice(sender, options) {
     };
 }
 
-async function gattConnect(sender, address) {
-    return await nativeRequest('connect', { address: address.replace(/:/g, '') });
+async function gattConnect(port, address) {
+    const gattId = await nativeRequest('connect', { address: address.replace(/:/g, '') });
+    portsObjects.get(port).devices.add(gattId);
+    return gattId;
 }
 
-async function gattDisconnect(sender, gattId) {
+async function gattDisconnect(port, gattId) {
+    portsObjects.get(port).devices.delete(gattId);
     return await nativeRequest('disconnect', { device: gattId });
 }
 
-async function getPrimaryService(sender, gattId, service) {
-    return (await getPrimaryServices(sender, gattId, service))[0];
+async function getPrimaryService(port, gattId, service) {
+    return (await getPrimaryServices(port, gattId, service))[0];
 }
 
-async function getPrimaryServices(sender, gattId, service) {
+async function getPrimaryServices(port, gattId, service) {
     let options = { device: gattId };
     if (service) {
         options.service = windowsUuid(service);
@@ -149,8 +154,8 @@ async function getPrimaryServices(sender, gattId, service) {
     return await nativeRequest('services', options);
 }
 
-async function getCharacteristic(sender, gattId, service, characteristic) {
-    const char = (await getCharacteristics(sender, gattId, service, characteristic)).find(x => true);
+async function getCharacteristic(port, gattId, service, characteristic) {
+    const char = (await getCharacteristics(port, gattId, service, characteristic)).find(x => true);
     if (!char) {
         throw new Error(`Characteristic ${characteristic} not found`);
     }
@@ -158,12 +163,12 @@ async function getCharacteristic(sender, gattId, service, characteristic) {
 }
 
 const charCache = {};
-async function getCharacteristics(sender, gattId, service, characteristic) {
+async function getCharacteristics(port, gattId, service, characteristic) {
     const key = `${gattId}/${service}`;
     if (!charCache[key]) {
-        charCache[key] = await nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
+        charCache[key] = nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
     }
-    const result = charCache[key];
+    const result = await charCache[key];
     if (characteristic) {
         return result.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
     } else {
@@ -171,7 +176,7 @@ async function getCharacteristics(sender, gattId, service, characteristic) {
     }
 }
 
-async function readValue(sender, gattId, service, characteristic) {
+async function readValue(port, gattId, service, characteristic) {
     return await nativeRequest('read', {
         device: gattId,
         service: windowsUuid(service),
@@ -179,7 +184,7 @@ async function readValue(sender, gattId, service, characteristic) {
     });
 }
 
-async function writeValue(sender, gattId, service, characteristic, value) {
+async function writeValue(port, gattId, service, characteristic, value) {
     if (!(value instanceof Array) || !value.every(item => typeof item === 'number')) {
         throw new Error('Invalid argument: value');
     }
@@ -192,14 +197,15 @@ async function writeValue(sender, gattId, service, characteristic, value) {
     });
 }
 
-async function startNotifications(sender, gattId, service, characteristic) {
+async function startNotifications(port, gattId, service, characteristic) {
     const subscriptionId = await nativeRequest('subscribe', {
         device: gattId,
         service: windowsUuid(service),
         characteristic: windowsUuid(characteristic)
     });
 
-    subscriptions[subscriptionId] = sender.tab;
+    subscriptions[subscriptionId] = port;
+    portsObjects.get(port).subscriptions.add(subscriptionId);
     return subscriptionId;
 }
 
@@ -216,8 +222,22 @@ const exportedMethods = {
     startNotifications
 };
 
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
+chrome.runtime.onConnect.addListener((port) => {
+    portsObjects.set(port, {
+        devices: new Set(),
+        subscriptions: new Set()
+    });
+
+    port.onDisconnect.addListener(() => {
+        for (let gattDevice of portsObjects.get(port).devices.values()) {
+            gattDisconnect(port, gattDevice);
+        }
+    });
+
+    port.onMessage.addListener((request) => {
+        function sendResponse(response) {
+            port.postMessage(Object.assign(response, { id: request.id, origin: request.origin }));
+        }
         if (!request.command) {
             sendResponse({ error: 'Missing `command`' });
         }
@@ -226,18 +246,13 @@ chrome.runtime.onMessage.addListener(
         }
         const fn = exportedMethods[request.command];
         if (fn) {
-            fn(sender, ...request.args)
+            fn(port, ...request.args)
                 .then(result => sendResponse({ result }))
                 .catch(error => sendResponse({ error: error.toString() }))
             return true;
         } else {
             sendResponse({ error: 'Unknown command: ' + request.command });
         }
-    });
-
-chrome.browserAction.onClicked.addListener(tab => {
-    chrome.tabs.executeScript(tab.ib, {
-        file: 'content.js'
     });
 });
 
