@@ -14,5 +14,5 @@ window.addEventListener('message', event => {
 
 var script = document.createElement('script');
 script.src = chrome.extension.getURL('polyfill.js');
-document.head.appendChild(script);
+document.documentElement.appendChild(script);
 

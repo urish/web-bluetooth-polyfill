@@ -17,6 +17,19 @@
     "web_accessible_resources": [
         "polyfill.js"
     ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://*/*",
+                "http://localhost:*/"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "all_frames": true,
+            "run_at": "document_start"
+        }
+    ],
     "browser_action": {
         "default_title": "Web Bluetooth Polyfill"
     },
