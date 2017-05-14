@@ -23,17 +23,17 @@ Most of the functionality is already there, but there might be slight difference
 List of API methods / events and their implementation status:
 
 - [X] requestDevice
-- [ ] Device Chooser UI
+- [ ] Device Chooser UI ([#1](https://github.com/urish/web-bluetooth-polyfill/issues/1))
 - [X] gatt.connect
 - [X] gatt.disconnect
-- [ ] gattserverdisconnected event
-- [ ] serviceadded / servicechanged / serviceremoved events
+- [ ] gattserverdisconnected event ([#2](https://github.com/urish/web-bluetooth-polyfill/issues/2))
+- [ ] serviceadded / servicechanged / serviceremoved events ([#3](https://github.com/urish/web-bluetooth-polyfill/issues/3))
 - [X] getPrimaryService / getPrimaryServices
 - [X] getCharacteristic / getCharacteristics
 - [X] writeValue
 - [X] readValue
 - [X] startNotifications / characteristicvaluechanged event
-- [ ] stopNotifications
-- [ ] getIncludedService / getIncludedServices
-- [ ] getDescriptor / getDescriptors
+- [ ] stopNotifications ([#4](https://github.com/urish/web-bluetooth-polyfill/issues/4))
+- [ ] getIncludedService / getIncludedServices ([#5](https://github.com/urish/web-bluetooth-polyfill/issues/5))
+- [ ] getDescriptor / getDescriptors ([#6](https://github.com/urish/web-bluetooth-polyfill/issues/6))
 
