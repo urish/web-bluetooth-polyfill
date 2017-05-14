@@ -153,7 +153,8 @@ async function getPrimaryServices(port, gattId, service) {
     if (service) {
         options.service = windowsUuid(service);
     }
-    return await nativeRequest('services', options);
+    const services = await nativeRequest('services', options);
+    return services.map(normalizeUuid);
 }
 
 async function getCharacteristic(port, gattId, service, characteristic) {
@@ -172,10 +173,11 @@ async function getCharacteristics(port, gattId, service, characteristic) {
         characteristicCache[gattId][service] = nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
     }
     const result = await characteristicCache[gattId][service];
+    const characterstics = result.map(c => Object.assign({}, c, {uuid: normalizeUuid(c.uuid)}));
     if (characteristic) {
-        return result.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
+        return characterstics.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
     } else {
-        return result;
+        return characterstics;
     }
 }
 
