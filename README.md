@@ -4,7 +4,7 @@ The Polyfill enables Web Bluetooth in Chrome on Windows 10.
 
 ## Installation
 
-1. You need to help Windows 10 Creators Update (build 15063) or newer
+1. You need to have Windows 10 Creators Update (build 15063) or newer
 2. Clone this repo: `git clone https://github.com/urish/web-bluetooth-polyfill`
 3. Open Chrome Extensions pane (chrome://extensions/) and enable "Developer Mode" (there is a checkbox on top of the page)
 4. Click the "Load unpacked extension..." button
