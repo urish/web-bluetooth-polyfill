@@ -26,7 +26,7 @@ List of API methods / events and their implementation status:
 - [ ] Device Chooser UI ([#1](https://github.com/urish/web-bluetooth-polyfill/issues/1))
 - [X] gatt.connect
 - [X] gatt.disconnect
-- [ ] gattserverdisconnected event ([#2](https://github.com/urish/web-bluetooth-polyfill/issues/2))
+- [X] gattserverdisconnected event
 - [ ] serviceadded / servicechanged / serviceremoved events ([#3](https://github.com/urish/web-bluetooth-polyfill/issues/3))
 - [X] getPrimaryService / getPrimaryServices
 - [X] getCharacteristic / getCharacteristics
