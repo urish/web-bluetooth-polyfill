@@ -18,6 +18,7 @@ async function nativeRequest(cmd, params) {
 }
 
 const subscriptions = {};
+const devices = {};
 nativePort.onMessage.addListener((msg) => {
     if (debugPrints) {
         console.log('Received native message:', msg);
@@ -35,6 +36,18 @@ nativePort.onMessage.addListener((msg) => {
         const port = subscriptions[msg.subscriptionId];
         if (port) {
             port.postMessage(msg);
+        }
+    }
+    if (msg._type === 'disconnectEvent') {
+        const gattId = msg.device;
+        const device = devices[gattId];
+        if (device) {
+            device.forEach(port => {
+                port.postMessage({event: 'disconnectEvent', device: gattId});
+                portsObjects.get(port).devices.delete(gattId);
+            });
+            delete characteristicCache[gattId];
+            delete devices[gattId];
         }
     }
 });
@@ -135,13 +148,21 @@ async function requestDevice(port, options) {
 async function gattConnect(port, address) {
     const gattId = await nativeRequest('connect', { address: address.replace(/:/g, '') });
     portsObjects.get(port).devices.add(gattId);
+    if (!devices[gattId]) {
+        devices[gattId] = new Set();
+    }
+    devices[gattId].add(port);
     return gattId;
 }
 
 async function gattDisconnect(port, gattId) {
     portsObjects.get(port).devices.delete(gattId);
-    delete characteristicCache[gattId];
-    return await nativeRequest('disconnect', { device: gattId });
+    devices[gattId].delete(port);
+    if (devices[gattId].size() === 0) {
+        delete characteristicCache[gattId];
+        delete devices[gattId];
+        return await nativeRequest('disconnect', { device: gattId });
+    }
 }
 
 async function getPrimaryService(port, gattId, service) {

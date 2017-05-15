@@ -83,6 +83,16 @@ concurrency::task<IJsonValue^> connectRequest(JsonObject ^command) {
 		throw ref new FailureException(ref new String(L"Device not found (null)"));
 	}
 	devices->Insert(device->DeviceId, device);
+	device->ConnectionStatusChanged += ref new Windows::Foundation::TypedEventHandler<Bluetooth::BluetoothLEDevice ^, Platform::Object ^>(
+		[](Windows::Devices::Bluetooth::BluetoothLEDevice^ device, Platform::Object^ eventArgs) {
+		if (device->ConnectionStatus == Bluetooth::BluetoothConnectionStatus::Disconnected) {
+			JsonObject^ msg = ref new JsonObject();
+			msg->Insert("_type", JsonValue::CreateStringValue("disconnectEvent"));
+			msg->Insert("device", JsonValue::CreateStringValue(device->DeviceId));
+			writeObject(msg);
+			devices->Remove(device->DeviceId);
+		}
+	});
 	return JsonValue::CreateStringValue(device->DeviceId);
 }
 

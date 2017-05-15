@@ -2,11 +2,25 @@ if (!navigator.bluetooth) {
     console.log('Windows 10 Web Bluetooth Polyfill loaded');
 
     (function () {
+        const connectionSymbol = Symbol('connection');
+
         const outstandingRequests = {};
         const activeSubscriptions = {};
+        const connectedDevices = new Set();
         let requestId = 0;
         window.addEventListener('message', event => {
             if (event.source === window && event.data && event.data.type === 'WebBluetoothPolyCSToPage') {
+                if (event.data.event === 'disconnectEvent') {
+                    const { device } = event.data;
+                    Array.from(connectedDevices)
+                        .filter(d => d.gatt[connectionSymbol] === device)
+                        .forEach(matchingDevice => {
+                            matchingDevice.gatt[connectionSymbol] = null;
+                            matchingDevice.dispatchEvent({ type: 'gattserverdisconnected' });
+                            connectedDevices.delete(matchingDevice);
+                        });
+                    return;
+                }
                 if (event.data.subscriptionId) {
                     const subscription = activeSubscriptions[event.data.subscriptionId];
                     if (subscription) {
@@ -161,7 +175,6 @@ if (!navigator.bluetooth) {
             }
         }
 
-        const connectionSymbol = Symbol('connection');
         class BluetoothRemoteGATTServer {
             constructor(device) {
                 this.device = device;
@@ -170,14 +183,16 @@ if (!navigator.bluetooth) {
 
             async connect() {
                 let result = await callExtension('gattConnect', [this.device.id]);
+                connectedDevices.add(this.device);
                 this[connectionSymbol] = result;
-                // TODO listen for disconnect
                 return this;
             }
 
             disconnect() {
                 callExtension('gattDisconnect', [this._connection]);
                 this[connectionSymbol] = null;
+                connectedDevices.delete(this.device);
+                this.device.dispatchEvent('gattserverdisconnected');
             }
 
             get connected() {
