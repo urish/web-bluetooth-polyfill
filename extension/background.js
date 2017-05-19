@@ -158,7 +158,7 @@ async function gattConnect(port, address) {
 async function gattDisconnect(port, gattId) {
     portsObjects.get(port).devices.delete(gattId);
     devices[gattId].delete(port);
-    if (devices[gattId].size() === 0) {
+    if (devices[gattId].size === 0) {
         delete characteristicCache[gattId];
         delete devices[gattId];
         return await nativeRequest('disconnect', { device: gattId });
