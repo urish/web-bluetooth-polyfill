@@ -1,10 +1,11 @@
 const fs = require('fs');
-const { ChromeEventTarget, loadScript } = require('./test-utils');
+const { ChromeEventTarget, loadScript, tick } = require('./test-utils');
 const backgroundScript = loadScript('../extension/background');
 
 class BackgroundDriver {
     constructor() {
         this.lastMessage = {};
+        this._expectation = null;
         this._setup();
     }
 
@@ -27,12 +28,37 @@ class BackgroundDriver {
         backgroundScript.runInNewContext({ chrome, console, Array });
     }
 
-    respond(cmd, response) {
-        expect(this.lastMessage.cmd).toBe(cmd);
-        this.nativePort.onMessage.dispatch(Object.assign({}, response, {
-            _id: this.lastMessage._id,
-            _type: 'response'
-        }));
+    expect(cmd, response) {
+        this._expectation = [cmd, response];
+    }
+
+    autoRespond(responseTable) {
+        this.nativePort.postMessage.mockImplementation(msg => {
+            this.lastMessage = msg;
+            expect(Object.keys(responseTable)).toContain(msg.cmd);
+            const response = responseTable[msg.cmd](msg);
+            this.nativePort.onMessage.dispatch(Object.assign({}, response, {
+                _id: msg._id,
+                _type: 'response'
+            }));
+        });
+    }
+
+    advertiseDevice(name, id, services = []) {
+        this.autoRespond({
+            scan: () => {
+                setImmediate(() => {
+                    this.nativePort.onMessage.dispatch({
+                        _type: 'scanResult',
+                        bluetoothAddress: id,
+                        localName: name,
+                        serviceUuids: services
+                    });
+                });
+                return { result: null };
+            },
+            stopScan: () => ({ result: null }),
+        });
     }
 }
 

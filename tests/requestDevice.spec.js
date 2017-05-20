@@ -13,10 +13,16 @@ describe('requestDevice', () => {
     it('should return devices matching the given filters', async () => {
         const background = new BackgroundDriver();
         const bluetooth = new PolyfillDriver(background).bluetooth;
-        const promise = bluetooth.requestDevice({
+
+        background.autoRespond({
+            scan: () => ({result: null}),
+            stopScan: () => ({result: null}),
+        });
+
+        const devicePromise = bluetooth.requestDevice({
             filters: [{ 'name': 'test-device' }]
         });
-        background.respond('scan', { result: null });
+
         await tick();
         background.nativePort.onMessage.dispatch({
             _type: 'scanResult',
@@ -26,9 +32,9 @@ describe('requestDevice', () => {
             rssi: -77,
             serviceUuids: ['{6e400001-b5a3-f393-e0a9-e50e24dcca9e}'],
             timestamp: 24784186015330,
-        })
+        });
 
-        const device = await promise;
+        const device = await devicePromise;
         expect(device.id).toBe('aa:bb:cc:dd:ee:ff');
         expect(device.name).toBe('test-device');
     });
