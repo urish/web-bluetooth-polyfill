@@ -519,6 +519,10 @@ esutils@^2.0.2:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/esutils/-/esutils-2.0.2.tgz#0abf4f1caa5bcb1f7a9d8acc6dea4faaa04bac9b"
 
+event-target-shim@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/event-target-shim/-/event-target-shim-2.0.0.tgz#a6c07fb273495a3789e105b49fcc3cb0a308fab4"
+
 exec-sh@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/exec-sh/-/exec-sh-0.2.0.tgz#14f75de3f20d286ef933099b2ce50a90359cef10"
