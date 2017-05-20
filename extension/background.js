@@ -43,7 +43,7 @@ nativePort.onMessage.addListener((msg) => {
         const device = devices[gattId];
         if (device) {
             device.forEach(port => {
-                port.postMessage({event: 'disconnectEvent', device: gattId});
+                port.postMessage({ event: 'disconnectEvent', device: gattId });
                 portsObjects.get(port).devices.delete(gattId);
             });
             delete characteristicCache[gattId];
@@ -194,7 +194,7 @@ async function getCharacteristics(port, gattId, service, characteristic) {
         characteristicCache[gattId][service] = nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
     }
     const result = await characteristicCache[gattId][service];
-    const characterstics = result.map(c => Object.assign({}, c, {uuid: normalizeUuid(c.uuid)}));
+    const characterstics = result.map(c => Object.assign({}, c, { uuid: normalizeUuid(c.uuid) }));
     if (characteristic) {
         return characterstics.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
     } else {
