@@ -1,0 +1,27 @@
+{
+  "name": "web-bluetooth-polyfill",
+  "version": "1.0.0",
+  "description": "Web Bluetooth Polyfill",
+  "main": "background.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/urish/web-bluetooth-polyfill.git"
+  },
+  "keywords": [
+    "web",
+    "bluetooth"
+  ],
+  "author": "Uri Shaked",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/urish/web-bluetooth-polyfill/issues"
+  },
+  "homepage": "https://github.com/urish/web-bluetooth-polyfill#readme",
+  "devDependencies": {
+    "jest": "^20.0.3"
+  }
+}
