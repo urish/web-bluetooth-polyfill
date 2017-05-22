@@ -39,3 +39,15 @@ List of API methods / events and their implementation status:
 - [ ] getIncludedService / getIncludedServices ([#5](https://github.com/urish/web-bluetooth-polyfill/issues/5))
 - [ ] getDescriptor / getDescriptors ([#6](https://github.com/urish/web-bluetooth-polyfill/issues/6))
 
+## Running tests
+
+If you want to run tests, during local development, you will need [node.js](https://nodejs.org/en/) and [yarn](https://yarnpkg.com/en/). Then, run the following commands:
+
+    yarn
+    yarn test
+    
+You can also run the tests in watch mode, which will only run tests related to files changed since the last commit:
+
+    yarn run test:watch
+
+
