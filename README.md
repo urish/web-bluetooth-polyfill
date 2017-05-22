@@ -25,7 +25,7 @@ Most of the functionality is already there, but there might be slight difference
 List of API methods / events and their implementation status:
 
 - [X] requestDevice
-- [ ] Device Chooser UI ([#1](https://github.com/urish/web-bluetooth-polyfill/issues/1))
+- [ ] Device Chooser UI ([#1](https://github.com/urish/web-bluetooth-polyfill/issues/1)) - in progress
 - [X] gatt.connect
 - [X] gatt.disconnect
 - [X] gattserverdisconnected event
