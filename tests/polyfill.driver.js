@@ -21,6 +21,8 @@ class PolyfillDriver {
                 }));
             }
         };
+        this.window = window;
+        this.port = port;
         window.addEventListener('message', event => {
             if (event.data.type === 'WebBluetoothPolyPageToCS') {
                 port.onMessage.dispatch(JSON.parse(JSON.stringify(event.data)));
@@ -39,6 +41,19 @@ class PolyfillDriver {
         polyfillScript.runInNewContext({ window, navigator, console: mockConsole });
         this._background._onConnect.dispatch(port);
         this.bluetooth = navigator.bluetooth;
+    }
+
+    contentMessage(msg) {
+        this.port.onMessage.dispatch(msg);
+    }
+
+    autoChooseDevice(deviceId) {
+        this.window.addEventListener('message', (e) => {
+            if (e.data._type === 'showDeviceChooser') {
+                setImmediate(() =>
+                    this.contentMessage({ cmd: 'chooserPair', deviceId }));
+            }
+        });
     }
 }
 

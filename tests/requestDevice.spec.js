@@ -12,11 +12,12 @@ describe('requestDevice', () => {
 
     it('should return devices matching the given filters', async () => {
         const background = new BackgroundDriver();
-        const bluetooth = new PolyfillDriver(background).bluetooth;
+        const polyfill = new PolyfillDriver(background);
+        const { bluetooth } = polyfill;
 
         background.autoRespond({
-            scan: () => ({result: null}),
-            stopScan: () => ({result: null}),
+            scan: () => ({ result: null }),
+            stopScan: () => ({ result: null }),
         });
 
         const devicePromise = bluetooth.requestDevice({
@@ -33,6 +34,8 @@ describe('requestDevice', () => {
             serviceUuids: ['{6e400001-b5a3-f393-e0a9-e50e24dcca9e}'],
             timestamp: 24784186015330,
         });
+
+        polyfill.contentMessage({ cmd: 'chooserPair', deviceId: 'aa:bb:cc:dd:ee:ff' });
 
         const device = await devicePromise;
         expect(device.id).toBe('aa:bb:cc:dd:ee:ff');

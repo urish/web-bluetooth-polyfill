@@ -116,32 +116,55 @@ function matchDeviceFilter(filter, device) {
 
 let scanning = false;
 async function requestDevice(port, options) {
-    if (!options.filters) {
+    if (!options.filters && !options.acceptAllDevices) {
         // TODO better filters validation, proper error message
         throw new Error('Filters must be provided');
     }
 
-    let deviceFoundCallback = null;
-    nativePort.onMessage.addListener(msg => {
-        if (msg._type === 'scanResult' && deviceFoundCallback) {
+    let deviceNames = {};
+    let deviceRssi = {};
+    function scanResultListener(msg) {
+        if (msg._type === 'scanResult') {
+            if (msg.localName) {
+                deviceNames[msg.bluetoothAddress] = msg.localName;
+            } else {
+                msg.localName = deviceNames[msg.bluetoothAddress];
+            }
+            deviceRssi[msg.bluetoothAddress] = msg.rssi;
             if (options.acceptAllDevices ||
                 options.filters.some(filter => matchDeviceFilter(filter, msg))) {
-                nativeRequest('stopScan');
-                deviceFoundCallback(msg);
+                port.postMessage(msg);
             }
         }
-    });
+    }
+
+    nativePort.onMessage.addListener(scanResultListener);
+    port.postMessage({ _type: 'showDeviceChooser' });
     if (!scanning) {
         await nativeRequest('scan');
     }
-    const device = await new Promise(resolve => {
-        deviceFoundCallback = resolve;
+    const deviceAddress = await new Promise((resolve, reject) => {
+        port.onMessage.addListener(msg => {
+            if (msg.type === 'WebBluetoothPolyPageToCS') {
+                // This is a message from the page itself, not from the content script.
+                // Therefore, we don't trust it.
+                return;
+            }
+            if (msg.cmd === 'chooserPair') {
+                resolve(msg.deviceId);
+            }
+            if (msg.cmd === 'chooserCancel') {
+                reject(new Error('User canceled device chooser'));
+            }
+        });
     });
+    await nativeRequest('stopScan');
+    nativePort.onMessage.removeListener(scanResultListener);
 
     return {
-        address: device.bluetoothAddress,
-        __rssi: device.rssi,
-        name: device.localName
+        address: deviceAddress,
+        __rssi: deviceRssi[deviceAddress],
+        name: deviceNames[deviceAddress]
     };
 }
 

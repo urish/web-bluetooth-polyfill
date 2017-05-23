@@ -5,10 +5,11 @@ const { tick } = require('./test-utils');
 describe('gatt.connect', () => {
     it('should establish a gatt connection', async () => {
         const background = new BackgroundDriver();
-        const bluetooth = new PolyfillDriver(background).bluetooth;
+        const polyfill = new PolyfillDriver(background);
         
         background.advertiseDevice('test-device', '11:22:33:44:55:66');
-        const device = await bluetooth.requestDevice({
+        polyfill.autoChooseDevice('11:22:33:44:55:66');
+        const device = await polyfill.bluetooth.requestDevice({
             filters: [{ 'name': 'test-device' }]
         });
 

@@ -10,6 +10,10 @@ class ChromeEventTarget {
         this.listeners.add(fn);
     }
 
+    removeListener(fn) {
+        this.listeners.delete(fn);
+    }
+
     dispatch(...args) {
         Array.from(this.listeners).forEach(item => item(...args));
     }
