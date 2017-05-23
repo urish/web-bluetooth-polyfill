@@ -111,6 +111,9 @@ class DeviceChooserUI {
                     <button id="btn-cancel">Cancel</button>
                     <button id="btn-pair">Pair</button>
                 </div>
+                <div id="footer">
+                    Powered by <a href="https://github.com/urish/web-bluetooth-polyfill" target="_blank">Web Bluetooth Polyfill</a>
+                </div>
             </div>
         `;
 
