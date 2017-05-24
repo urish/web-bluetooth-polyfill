@@ -14,10 +14,11 @@ describe('requestDevice', () => {
         const background = new BackgroundDriver();
         const polyfill = new PolyfillDriver(background);
         const { bluetooth } = polyfill;
+        const stopScanMock = jest.fn().mockReturnValue({ result: null });
 
         background.autoRespond({
             scan: () => ({ result: null }),
-            stopScan: () => ({ result: null }),
+            stopScan: stopScanMock,
         });
 
         const devicePromise = bluetooth.requestDevice({
@@ -40,5 +41,40 @@ describe('requestDevice', () => {
         const device = await devicePromise;
         expect(device.id).toBe('aa:bb:cc:dd:ee:ff');
         expect(device.name).toBe('test-device');
+        expect(stopScanMock).toHaveBeenCalled();
+    });
+
+    it('should throw an error if the user cancels the device chooser dialog', async () => {
+        const background = new BackgroundDriver();
+        const polyfill = new PolyfillDriver(background);
+        const { bluetooth } = polyfill;
+        const stopScanMock = jest.fn().mockReturnValue({ result: null });
+
+        background.autoRespond({
+            scan: () => ({ result: null }),
+            stopScan: stopScanMock,
+        });
+
+        const devicePromise = bluetooth.requestDevice({
+            filters: [{ 'name': 'test-device' }]
+        });
+
+        await tick();
+        background.nativePort.onMessage.dispatch({
+            _type: 'scanResult',
+            advType: 'ScanResponse',
+            bluetoothAddress: 'aa:bb:cc:dd:ee:ff',
+            localName: 'test-device',
+            rssi: -77,
+            serviceUuids: ['{6e400001-b5a3-f393-e0a9-e50e24dcca9e}'],
+            timestamp: 24784186015330,
+        });
+
+        polyfill.contentMessage({ cmd: 'chooserCancel' });
+
+        await devicePromise.catch(() => null);
+
+        expect(devicePromise).rejects.toBe('Error: User canceled device chooser');
+        expect(stopScanMock).toHaveBeenCalled();
     });
 });

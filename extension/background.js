@@ -143,29 +143,32 @@ async function requestDevice(port, options) {
     if (!scanning) {
         await nativeRequest('scan');
     }
-    const deviceAddress = await new Promise((resolve, reject) => {
-        port.onMessage.addListener(msg => {
-            if (msg.type === 'WebBluetoothPolyPageToCS') {
-                // This is a message from the page itself, not from the content script.
-                // Therefore, we don't trust it.
-                return;
-            }
-            if (msg.cmd === 'chooserPair') {
-                resolve(msg.deviceId);
-            }
-            if (msg.cmd === 'chooserCancel') {
-                reject(new Error('User canceled device chooser'));
-            }
+    try {
+        const deviceAddress = await new Promise((resolve, reject) => {
+            port.onMessage.addListener(msg => {
+                if (msg.type === 'WebBluetoothPolyPageToCS') {
+                    // This is a message from the page itself, not from the content script.
+                    // Therefore, we don't trust it.
+                    return;
+                }
+                if (msg.cmd === 'chooserPair') {
+                    resolve(msg.deviceId);
+                }
+                if (msg.cmd === 'chooserCancel') {
+                    reject(new Error('User canceled device chooser'));
+                }
+            });
         });
-    });
-    await nativeRequest('stopScan');
-    nativePort.onMessage.removeListener(scanResultListener);
 
-    return {
-        address: deviceAddress,
-        __rssi: deviceRssi[deviceAddress],
-        name: deviceNames[deviceAddress]
-    };
+        return {
+            address: deviceAddress,
+            __rssi: deviceRssi[deviceAddress],
+            name: deviceNames[deviceAddress]
+        };
+    } finally {
+        await nativeRequest('stopScan');
+        nativePort.onMessage.removeListener(scanResultListener);
+    }
 }
 
 async function gattConnect(port, address) {
