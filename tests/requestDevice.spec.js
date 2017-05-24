@@ -72,9 +72,7 @@ describe('requestDevice', () => {
 
         polyfill.contentMessage({ cmd: 'chooserCancel' });
 
-        await devicePromise.catch(() => null);
-
-        expect(devicePromise).rejects.toBe('Error: User canceled device chooser');
+        await expect(devicePromise).rejects.toBe('Error: User canceled device chooser');
         expect(stopScanMock).toHaveBeenCalled();
     });
 
