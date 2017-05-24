@@ -103,7 +103,7 @@ function startScanning(port) {
     if (!scanningCounter) {
         nativeRequest('scan');
     }
-    portsObjects.get(port).scanCount = (portsObjects.get(port).scanCount || 0) + 1;
+    portsObjects.get(port).scanCount++;
     scanningCounter++;
 }
 
@@ -174,6 +174,8 @@ async function requestDevice(port, options) {
             });
         });
 
+        portsObjects.get(port).knownDeviceIds.add(deviceAddress);
+
         return {
             address: deviceAddress,
             __rssi: deviceRssi[deviceAddress],
@@ -186,6 +188,12 @@ async function requestDevice(port, options) {
 }
 
 async function gattConnect(port, address) {
+    // Security measure: make sure this device address has been previously returned
+    // by requestDevice()
+    if (!portsObjects.get(port).knownDeviceIds.has(address)) {
+        throw new Error('Unknown device address');
+    }
+
     const gattId = await nativeRequest('connect', { address: address.replace(/:/g, '') });
     portsObjects.get(port).devices.add(gattId);
     if (!devices[gattId]) {
@@ -290,8 +298,10 @@ const exportedMethods = {
 
 chrome.runtime.onConnect.addListener((port) => {
     portsObjects.set(port, {
+        scanCount: 0,
         devices: new Set(),
-        subscriptions: new Set()
+        subscriptions: new Set(),
+        knownDeviceIds: new Set(),
     });
 
     port.onDisconnect.addListener(() => {
