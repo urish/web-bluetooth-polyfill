@@ -55,6 +55,10 @@ class PolyfillDriver {
             }
         });
     }
+
+    disconnect() {
+        this.port.onDisconnect.dispatch();
+    }
 }
 
 exports.PolyfillDriver = PolyfillDriver;

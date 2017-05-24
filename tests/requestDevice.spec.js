@@ -77,4 +77,26 @@ describe('requestDevice', () => {
         expect(devicePromise).rejects.toBe('Error: User canceled device chooser');
         expect(stopScanMock).toHaveBeenCalled();
     });
+
+    it('should stop scanning if the page disconnects', async () => {
+        const background = new BackgroundDriver();
+        const polyfill = new PolyfillDriver(background);
+        const { bluetooth } = polyfill;
+        const stopScanMock = jest.fn().mockReturnValue({ result: null });
+
+        background.autoRespond({
+            scan: () => ({ result: null }),
+            stopScan: stopScanMock,
+        });
+
+        const devicePromise = bluetooth.requestDevice({
+            filters: [{ 'name': 'test-device' }]
+        });
+
+        await tick();
+
+        polyfill.disconnect();
+
+        expect(stopScanMock).toHaveBeenCalled();
+    });
 });

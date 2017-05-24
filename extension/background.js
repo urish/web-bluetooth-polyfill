@@ -98,6 +98,23 @@ function windowsUuid(uuid) {
     return '{' + normalizeUuid(uuid) + '}';
 }
 
+let scanningCounter = 0;
+function startScanning(port) {
+    if (!scanningCounter) {
+        nativeRequest('scan');
+    }
+    portsObjects.get(port).scanCount = (portsObjects.get(port).scanCount || 0) + 1;
+    scanningCounter++;
+}
+
+function stopScanning(port) {
+    scanningCounter--;
+    portsObjects.get(port).scanCount--;
+    if (!scanningCounter) {
+        nativeRequest('stopScan');
+    }
+}
+
 function matchDeviceFilter(filter, device) {
     if (filter.services) {
         const deviceServices = device.serviceUuids.map(normalizeUuid);
@@ -114,7 +131,6 @@ function matchDeviceFilter(filter, device) {
     return true;
 }
 
-let scanning = false;
 async function requestDevice(port, options) {
     if (!options.filters && !options.acceptAllDevices) {
         // TODO better filters validation, proper error message
@@ -140,9 +156,7 @@ async function requestDevice(port, options) {
 
     nativePort.onMessage.addListener(scanResultListener);
     port.postMessage({ _type: 'showDeviceChooser' });
-    if (!scanning) {
-        await nativeRequest('scan');
-    }
+    startScanning(port);
     try {
         const deviceAddress = await new Promise((resolve, reject) => {
             port.onMessage.addListener(msg => {
@@ -166,7 +180,7 @@ async function requestDevice(port, options) {
             name: deviceNames[deviceAddress]
         };
     } finally {
-        await nativeRequest('stopScan');
+        stopScanning(port);
         nativePort.onMessage.removeListener(scanResultListener);
     }
 }
@@ -283,6 +297,9 @@ chrome.runtime.onConnect.addListener((port) => {
     port.onDisconnect.addListener(() => {
         for (let gattDevice of portsObjects.get(port).devices.values()) {
             gattDisconnect(port, gattDevice);
+        }
+        while (portsObjects.get(port).scanCount > 0) {
+            stopScanning(port);
         }
     });
 
