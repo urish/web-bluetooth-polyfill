@@ -93,6 +93,7 @@ if (!navigator.bluetooth) {
         }
 
         const subscriptionId = Symbol("subscriptionId");
+        const notificationsStarted = Symbol("notificationsStarted");
         class BluetoothRemoteGATTCharacteristic extends BluetoothEventTarget {
             constructor(service, uuid, properties) {
                 super();
@@ -126,7 +127,18 @@ if (!navigator.bluetooth) {
             }
 
             async startNotifications() {
-                this[subscriptionId] = await callExtension('startNotifications', [this._connection, this.service.uuid, this.uuid]);
+                if (this[notificationsStarted]) {
+                    // already subscribed, do nothing
+                    return this;
+                }
+                this[notificationsStarted] = true;
+
+                try {
+                    this[subscriptionId] = await callExtension('startNotifications', [this._connection, this.service.uuid, this.uuid]);
+                } catch (err) {
+                    this[notificationsStarted] = false;
+                    throw err;
+                }
                 activeSubscriptions[this[subscriptionId]] = (event) => {
                     this.value = new DataView(new Uint8Array(event.value).buffer);
                     this.dispatchEvent({
@@ -141,6 +153,7 @@ if (!navigator.bluetooth) {
                 // TODO implement
                 delete activeSubscriptions[this[subscriptionId]];
                 this[subscriptionId] = null;
+                this[notificationsStarted] = false;
                 return this;
             }
         }
