@@ -60,6 +60,8 @@ Guid parseUuid(String^ uuid) {
 	}
 }
 
+CRITICAL_SECTION OutputCriticalSection;
+
 void writeObject(JsonObject^ jsonObject) {
 	String^ jsonString = jsonObject->Stringify();
 
@@ -67,12 +69,15 @@ void writeObject(JsonObject^ jsonObject) {
 	std::string stringUtf8 = convert.to_bytes(jsonString->Data());
 
 	auto len = stringUtf8.length();
+
+	EnterCriticalSection(&OutputCriticalSection);
 	std::cout << char(len >> 0)
 		<< char(len >> 8)
 		<< char(len >> 16)
 		<< char(len >> 24);
 
 	std::cout << stringUtf8 << std::flush;
+	LeaveCriticalSection(&OutputCriticalSection);
 }
 
 concurrency::task<IJsonValue^> connectRequest(JsonObject ^command) {
@@ -352,6 +357,10 @@ int main(Array<String^>^ args) {
 		EOAC_NONE,
 		nullptr);
 
+	if (!InitializeCriticalSectionAndSpinCount(&OutputCriticalSection, 0x00000400)) {
+		return -1;
+	}
+
 	bleAdvertisementWatcher = ref new Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher();
 	bleAdvertisementWatcher->ScanningMode = Bluetooth::Advertisement::BluetoothLEScanningMode::Active;
 	bleAdvertisementWatcher->Received += ref new Windows::Foundation::TypedEventHandler<Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher ^, Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs ^>(
@@ -410,6 +419,8 @@ int main(Array<String^>^ args) {
 		msg->Insert("error", JsonValue::CreateStringValue(ref new String(wReason.c_str())));
 		writeObject(msg);
 	}
+
+	DeleteCriticalSection(&OutputCriticalSection);
 
 	return 0;
 }
