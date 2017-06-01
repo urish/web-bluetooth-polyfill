@@ -125,7 +125,7 @@ function matchDeviceFilter(filter, device) {
     if (filter.name && filter.name !== device.localName) {
         return false;
     }
-    if (filter.namePrefix && device.localName.indexOf(filter.namePrefix) !== 0) {
+    if (filter.namePrefix && (!device.localName || device.localName.indexOf(filter.namePrefix) !== 0)) {
         return false;
     }
     return true;
