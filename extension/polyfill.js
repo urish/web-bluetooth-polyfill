@@ -221,6 +221,9 @@ if (!navigator.bluetooth) {
 
             async getPrimaryService(service) {
                 let uuid = await callExtension('getPrimaryService', [this._connection, service]);
+                if (!uuid) {
+                    throw new Error(`Service ${service} not found`);
+                }
                 return new BluetoothRemoteGATTService(this.device, uuid, true);
             }
 
