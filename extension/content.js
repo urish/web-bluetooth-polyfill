@@ -64,6 +64,9 @@ class DeviceChooserUI {
                     padding: 16px;
                     box-shadow: 0 2px 3px rgba(0,0,0,0.4);
                     user-select: none;
+                    color: black;
+                    font-family: sans-serif;
+                    text-align: left;
                 }
 
                 #device-list {
@@ -71,6 +74,7 @@ class DeviceChooserUI {
                     height: 320px;
                     border: solid #9e9e9e 1px;
                     margin: 8px 0;
+                    overflow: auto;
                 }
 
                 .device-item {
