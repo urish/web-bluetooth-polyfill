@@ -11,6 +11,8 @@
     ],
     "background": {
         "scripts": [
+            "gatt-services.js",
+            "gatt-characteristics.js",
             "background.js"
         ]
     },

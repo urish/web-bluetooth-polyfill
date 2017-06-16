@@ -66,18 +66,8 @@ function leftPad(s, count, pad) {
     return s;
 }
 
-function normalizeUuid(uuid) {
+function normalizeUuid(uuid, standardUuids = {}) {
     const origUuid = uuid;
-    // TODO: complete this list
-    var standardUuids = {
-        // characteristics
-        battery_level: 0x2a19,
-
-        // services
-        heart_rate: 0x180d,
-        battery_service: 0x180f,
-        cycling_power: 0x1818,
-    }
     if (standardUuids[uuid]) {
         uuid = standardUuids[uuid];
     }
@@ -94,8 +84,20 @@ function normalizeUuid(uuid) {
     throw new Error(`Invalid UUID format: ${origUuid}`);
 }
 
-function windowsUuid(uuid) {
-    return '{' + normalizeUuid(uuid) + '}';
+function normalizeServiceUuid(uuid) {
+    return normalizeUuid(uuid, STANDARD_GATT_SERVICES);
+}
+
+function normalizeCharacteristicUuid(uuid) {
+    return normalizeUuid(uuid, STANDARD_GATT_CHARACTERISTICS);
+}
+
+function windowsServiceUuid(uuid) {
+    return '{' + normalizeUuid(uuid, STANDARD_GATT_SERVICES) + '}';
+}
+
+function windowsCharacteristicUuid(uuid) {
+    return '{' + normalizeUuid(uuid, STANDARD_GATT_CHARACTERISTICS) + '}';
 }
 
 let scanningCounter = 0;
@@ -117,8 +119,8 @@ function stopScanning(port) {
 
 function matchDeviceFilter(filter, device) {
     if (filter.services) {
-        const deviceServices = device.serviceUuids.map(normalizeUuid);
-        if (!filter.services.map(normalizeUuid).every(uuid => deviceServices.includes(uuid))) {
+        const deviceServices = device.serviceUuids.map(normalizeServiceUuid);
+        if (!filter.services.map(normalizeServiceUuid).every(uuid => deviceServices.includes(uuid))) {
             return false;
         }
     }
@@ -220,10 +222,10 @@ async function getPrimaryService(port, gattId, service) {
 async function getPrimaryServices(port, gattId, service) {
     let options = { device: gattId };
     if (service) {
-        options.service = windowsUuid(service);
+        options.service = windowsServiceUuid(service);
     }
     const services = await nativeRequest('services', options);
-    return services.map(normalizeUuid);
+    return services.map(normalizeServiceUuid);
 }
 
 async function getCharacteristic(port, gattId, service, characteristic) {
@@ -239,12 +241,15 @@ async function getCharacteristics(port, gattId, service, characteristic) {
         characteristicCache[gattId] = {};
     }
     if (!characteristicCache[gattId][service]) {
-        characteristicCache[gattId][service] = nativeRequest('characteristics', { device: gattId, service: windowsUuid(service) });
+        characteristicCache[gattId][service] = nativeRequest('characteristics', { 
+            device: gattId, 
+            service: windowsServiceUuid(service) 
+        });
     }
     const result = await characteristicCache[gattId][service];
-    const characterstics = result.map(c => Object.assign({}, c, { uuid: normalizeUuid(c.uuid) }));
+    const characterstics = result.map(c => Object.assign({}, c, { uuid: normalizeCharacteristicUuid(c.uuid) }));
     if (characteristic) {
-        return characterstics.filter(c => normalizeUuid(c.uuid) == normalizeUuid(characteristic))
+        return characterstics.filter(c => normalizeCharacteristicUuid(c.uuid) == normalizeCharacteristicUuid(characteristic))
     } else {
         return characterstics;
     }
@@ -253,8 +258,8 @@ async function getCharacteristics(port, gattId, service, characteristic) {
 async function readValue(port, gattId, service, characteristic) {
     return await nativeRequest('read', {
         device: gattId,
-        service: windowsUuid(service),
-        characteristic: windowsUuid(characteristic)
+        service: windowsServiceUuid(service),
+        characteristic: windowsCharacteristicUuid(characteristic)
     });
 }
 
@@ -265,8 +270,8 @@ async function writeValue(port, gattId, service, characteristic, value) {
 
     return await nativeRequest('write', {
         device: gattId,
-        service: windowsUuid(service),
-        characteristic: windowsUuid(characteristic),
+        service: windowsServiceUuid(service),
+        characteristic: windowsCharacteristicUuid(characteristic),
         value
     });
 }
@@ -274,8 +279,8 @@ async function writeValue(port, gattId, service, characteristic, value) {
 async function startNotifications(port, gattId, service, characteristic) {
     const subscriptionId = await nativeRequest('subscribe', {
         device: gattId,
-        service: windowsUuid(service),
-        characteristic: windowsUuid(characteristic)
+        service: windowsServiceUuid(service),
+        characteristic: windowsCharacteristicUuid(characteristic)
     });
 
     subscriptions[subscriptionId] = port;

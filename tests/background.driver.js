@@ -1,6 +1,12 @@
 const fs = require('fs');
+const vm = require('vm');
+
 const { ChromeEventTarget, loadScript, tick } = require('./test-utils');
-const backgroundScript = loadScript('../extension/background');
+const backgroundScripts = [
+    loadScript('../extension/gatt-services'),
+    loadScript('../extension/gatt-characteristics'),
+    loadScript('../extension/background')
+];
 
 class BackgroundDriver {
     constructor() {
@@ -25,7 +31,10 @@ class BackgroundDriver {
             }
         };
 
-        backgroundScript.runInNewContext({ chrome, console, Array });
+        const context = vm.createContext({ chrome, console, Array });
+        for (const script of backgroundScripts) {
+            script.runInContext(context);
+        }
     }
 
     expect(cmd, response) {
