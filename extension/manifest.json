@@ -36,7 +36,7 @@
     "browser_action": {
         "default_title": "Web Bluetooth Polyfill"
     },
-    "version": "0.3.2",
+    "version": "0.3.3",
     "minimum_chrome_version": "56",
     "manifest_version": 2
 }
