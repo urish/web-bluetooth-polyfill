@@ -18,6 +18,13 @@ The Polyfill enables Web Bluetooth in Chrome on Windows 10.
 
 That's it! Enjoy Web Bluetooth on Windows :-)
 
+## Troubleshooting
+
+1. Run the `winver` program to verify that you have Windows 10 Creators Update. It should display: "Version 1703 (OS Build 15063.413)" or higher.
+2. Make sure "Experimental Web Platform Features" flag is *disabled*. You can set it using this link: chrome://flags/#enable-experimental-web-platform-features
+3. Open the Devtools console of any web page, and look for the message: "Windows 10 Web Bluetooth Polyfill loaded". If you don't see this message, it means that either the extension was not installed correctly, or you already have something setting the `navigator.bluetooth` object to some value.
+4. Follow the [instructions here](https://github.com/urish/web-bluetooth-polyfill/issues/21#issuecomment-308990559) to debug the background page of the extension.
+
 ## Current State
 
 TL;DR - Should work out of the box with most Web Bluetooth apps.
