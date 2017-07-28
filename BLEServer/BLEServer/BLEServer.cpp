@@ -112,8 +112,17 @@ Concurrency::task<IJsonValue^> disconnectRequest(JsonObject ^command) {
 	auto newCharacteristicsMap = ref new Collections::Map<String^, Bluetooth::GenericAttributeProfile::GattCharacteristic^>();
 	for (auto pair : characteristicsMap)
 	{
-		if (!pair->Value->Service->Device->Equals(device)) {
-			newCharacteristicsMap->Insert(pair->Key, pair->Value);
+		try {
+			auto service = pair->Value->Service;
+			if (service->Device->Equals(device)) {
+				delete service->Device;
+				delete service;
+			} else {
+				newCharacteristicsMap->Insert(pair->Key, pair->Value);
+			}
+		}
+		catch (...) {
+			// Service is probably already closed, so we just skip it and it will be removed from the list
 		}
 	}
 	characteristicsMap = newCharacteristicsMap;
