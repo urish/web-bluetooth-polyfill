@@ -54,12 +54,18 @@ if (!navigator.bluetooth) {
 
         // Implmentation reference: https://developer.mozilla.org/en/docs/Web/API/EventTarget
         const listeners = Symbol('listeners');
+		const originalSymbol = Symbol('original');
         class BluetoothEventTarget {
             constructor() {
                 this[listeners] = {};
             }
 
             addEventListener(type, callback) {
+				if (typeof Zone !== 'undefined' && Zone.current && Zone.current.wrap) {
+					const original = callback;
+					callback = Zone.current.wrap(callback);
+					callback[originalSymbol] = original;
+				}
                 if (!(type in this[listeners])) {
                     this[listeners][type] = [];
                 }
@@ -72,7 +78,7 @@ if (!navigator.bluetooth) {
                 }
                 var stack = this[listeners][type];
                 for (var i = 0, l = stack.length; i < l; i++) {
-                    if (stack[i] === callback) {
+                    if (stack[i] === callback || stack[i][originalSymbol] === callback) {
                         stack.splice(i, 1);
                         return;
                     }
