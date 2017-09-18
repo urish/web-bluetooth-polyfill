@@ -211,7 +211,7 @@ if (!navigator.bluetooth) {
                 callExtension('gattDisconnect', [this._connection]);
                 this[connectionSymbol] = null;
                 connectedDevices.delete(this.device);
-                this.device.dispatchEvent('gattserverdisconnected');
+                this.device.dispatchEvent({type: 'gattserverdisconnected'});
             }
 
             get connected() {
