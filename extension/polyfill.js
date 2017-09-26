@@ -89,7 +89,7 @@ if (!navigator.bluetooth) {
                 if (!(event.type in this[listeners])) {
                     return true;
                 }
-                var stack = this[listeners][event.type];
+                var stack = [].concat(this[listeners][event.type]);
                 event.target = this;
                 for (var i = 0, l = stack.length; i < l; i++) {
                     stack[i].call(this, event);
