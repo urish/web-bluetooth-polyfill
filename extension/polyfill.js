@@ -54,18 +54,18 @@ if (!navigator.bluetooth) {
 
         // Implmentation reference: https://developer.mozilla.org/en/docs/Web/API/EventTarget
         const listeners = Symbol('listeners');
-		const originalSymbol = Symbol('original');
+        const originalSymbol = Symbol('original');
         class BluetoothEventTarget {
             constructor() {
                 this[listeners] = {};
             }
 
             addEventListener(type, callback) {
-				if (typeof Zone !== 'undefined' && Zone.current && Zone.current.wrap) {
-					const original = callback;
-					callback = Zone.current.wrap(callback);
-					callback[originalSymbol] = original;
-				}
+                if (typeof Zone !== 'undefined' && Zone.current && Zone.current.wrap) {
+                    const original = callback;
+                    callback = Zone.current.wrap(callback);
+                    callback[originalSymbol] = original;
+                }
                 if (!(type in this[listeners])) {
                     this[listeners][type] = [];
                 }
@@ -128,7 +128,7 @@ if (!navigator.bluetooth) {
             }
 
             async writeValue(value) {
-                const byteValues = Array.from(new Uint8Array(value));
+                const byteValues = Array.from(new Uint8Array(value.buffer || value));
                 await callExtension('writeValue', [this._connection, this.service.uuid, this.uuid, byteValues]);
             }
 
@@ -211,7 +211,7 @@ if (!navigator.bluetooth) {
                 callExtension('gattDisconnect', [this._connection]);
                 this[connectionSymbol] = null;
                 connectedDevices.delete(this.device);
-                this.device.dispatchEvent({type: 'gattserverdisconnected'});
+                this.device.dispatchEvent({ type: 'gattserverdisconnected' });
             }
 
             get connected() {
