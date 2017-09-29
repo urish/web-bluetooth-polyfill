@@ -20,7 +20,7 @@ describe('getPrimaryService', () => {
         background.autoRespond({
             'services': (msg) => {
                 expect(msg).toEqual(expect.objectContaining({
-                    device: 'gattDeviceId', 
+                    device: 'gattDeviceId',
                     service: '{0000ffe0-0000-1000-8000-00805f9b34fb}'
                 }));
                 return { result: ["{0000ffe0-0000-1000-8000-00805f9b34fb}"] };
@@ -31,7 +31,7 @@ describe('getPrimaryService', () => {
         expect(service.uuid).toEqual('0000ffe0-0000-1000-8000-00805f9b34fb');
     });
 
-        it('should support standard service names, e.g. cycling_power', async () => {
+    it('should support standard service names, e.g. cycling_power', async () => {
         const background = new BackgroundDriver();
         const polyfill = new PolyfillDriver(background);
 
@@ -49,7 +49,7 @@ describe('getPrimaryService', () => {
         background.autoRespond({
             'services': (msg) => {
                 expect(msg).toEqual(expect.objectContaining({
-                    device: 'gattDeviceId', 
+                    device: 'gattDeviceId',
                     service: '{00001818-0000-1000-8000-00805f9b34fb}'
                 }));
                 return { result: ["{00001818-0000-1000-8000-00805f9b34fb}"] };
