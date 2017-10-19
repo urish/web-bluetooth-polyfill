@@ -7,7 +7,7 @@ The Polyfill enables Web Bluetooth in Chrome on Windows 10.
 ## Installation
 
 1. You need to have Windows 10 Creators Update (version 1703 / build 15063) or newer
-2. You also need Visual C++ Redistributable for Visual Studio 2015 (x86) (https://www.microsoft.com/en-us/download/details.aspx?id=48145), if not already installed
+2. You also need [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145), if not already installed
 3. Clone this repo: `git clone https://github.com/urish/web-bluetooth-polyfill`
 4. Open Chrome Extensions pane (chrome://extensions/) and enable "Developer Mode" (there is a checkbox on top of the page)
 5. Click the "Load unpacked extension..." button
@@ -22,7 +22,7 @@ That's it! Enjoy Web Bluetooth on Windows :-)
 ## Troubleshooting
 
 1. Run the `winver` program to verify that you have Windows 10 Creators Update. It should display: "Version 1703 (OS Build 15063.413)" or higher.
-2. Try to launch `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` manually. If an error message containing something like `"VCRUNTIME140.dll is missing"` appears, install Visual C++ Redistributable for Visual Studio 2015 (x86) from here : https://www.microsoft.com/en-us/download/details.aspx?id=48145. Then launch `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` one more time. If a black window containing `{"_type":"Start"}` appears, then the BLEServer is working correctly.
+2. Try to running `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` manually. If an error message containing something like `"VCRUNTIME140.dll is missing"` appears, install [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145). Then launch `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` one more time. If a black window containing `{"_type":"Start"}` appears, then the BLEServer is working correctly.
 3. Make sure "Experimental Web Platform Features" flag is *disabled*. You can set it using this link: chrome://flags/#enable-experimental-web-platform-features
 4. Open the Devtools console of any web page, and look for the message: "Windows 10 Web Bluetooth Polyfill loaded". If you don't see this message, it means that either the extension was not installed correctly, or you already have something setting the `navigator.bluetooth` object to some value.
 5. Follow the [instructions here](https://github.com/urish/web-bluetooth-polyfill/issues/21#issuecomment-308990559) to debug the background page of the extension.
