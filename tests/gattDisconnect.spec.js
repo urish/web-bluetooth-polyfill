@@ -54,4 +54,17 @@ describe('gatt.disconnect', () => {
         device.addEventListener('gattserverdisconnected', listener2);
         device.gatt.disconnect(); 
     });
+
+    it('should silently return and not throw an exception if called when not connected', async () => {
+        const background = new BackgroundDriver();
+        const polyfill = new PolyfillDriver(background);
+
+        background.advertiseDevice('test-device', '11:22:33:44:55:66');
+        polyfill.autoChooseDevice('11:22:33:44:55:66');
+        const device = await polyfill.bluetooth.requestDevice({
+            filters: [{ 'name': 'test-device' }]
+        });
+
+        device.gatt.disconnect();
+    });
 });
