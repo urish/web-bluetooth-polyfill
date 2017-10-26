@@ -72,6 +72,8 @@ class DeviceChooserUI {
                 #device-list {
                     background: #f2f1f0;
                     height: 320px;
+                    min-height: 32px;
+                    max-height: calc(100vh - 120px);
                     border: solid #9e9e9e 1px;
                     margin: 8px 0;
                     overflow: auto;
