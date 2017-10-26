@@ -124,6 +124,10 @@ if (!navigator.bluetooth) {
             async readValue() {
                 const result = await callExtension('readValue', [this._connection, this.service.uuid, this.uuid]);
                 this.value = new DataView(new Uint8Array(result).buffer);
+                this.dispatchEvent({
+                    type: 'characteristicvaluechanged',
+                    bubbles: true
+                });
                 return this.value;
             }
 
