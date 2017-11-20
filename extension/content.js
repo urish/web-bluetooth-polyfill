@@ -66,6 +66,7 @@ class DeviceChooserUI {
                     user-select: none;
                     color: black;
                     font-family: sans-serif;
+                    font-size: initial;
                     text-align: left;
                 }
 
