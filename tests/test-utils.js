@@ -1,3 +1,5 @@
+/* eslint-env node, jest */
+
 const fs = require('fs');
 const vm = require('vm');
 

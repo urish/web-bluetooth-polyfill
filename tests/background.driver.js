@@ -1,11 +1,12 @@
-const fs = require('fs');
+/* eslint-env node, jest */
+
 const vm = require('vm');
 
-const { ChromeEventTarget, loadScript, tick } = require('./test-utils');
+const { ChromeEventTarget, loadScript } = require('./test-utils');
 const backgroundScripts = [
     loadScript('../extension/gatt-services'),
     loadScript('../extension/gatt-characteristics'),
-    loadScript('../extension/background')
+    loadScript('../extension/background'),
 ];
 
 class BackgroundDriver {
@@ -27,8 +28,8 @@ class BackgroundDriver {
         const chrome = {
             runtime: {
                 connectNative: jest.fn().mockReturnValue(this.nativePort),
-                onConnect: this._onConnect
-            }
+                onConnect: this._onConnect,
+            },
         };
 
         const context = vm.createContext({ chrome, console, Array });
@@ -48,7 +49,7 @@ class BackgroundDriver {
             const response = responseTable[msg.cmd](msg);
             this.nativePort.onMessage.dispatch(Object.assign({}, response, {
                 _id: msg._id,
-                _type: 'response'
+                _type: 'response',
             }));
         });
     }
@@ -61,7 +62,7 @@ class BackgroundDriver {
                         _type: 'scanResult',
                         bluetoothAddress: id,
                         localName: name,
-                        serviceUuids: services
+                        serviceUuids: services,
                     });
                 });
                 return { result: null };

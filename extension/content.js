@@ -1,3 +1,5 @@
+/* global window, document */
+
 // Connect to background script
 let port = chrome.runtime.connect();
 let chooserUI = null;
@@ -7,7 +9,7 @@ port.onMessage.addListener(message => {
         if (!chooserUI) {
             chooserUI = new DeviceChooserUI();
             chooserUI.onPair = deviceId => port.postMessage({ cmd: 'chooserPair', deviceId });
-            chooserUI.onCancel = deviceId => port.postMessage({ cmd: 'chooserCancel' });
+            chooserUI.onCancel = () => port.postMessage({ cmd: 'chooserCancel' });
         }
         chooserUI.show();
         return;
@@ -23,7 +25,7 @@ port.onMessage.addListener(message => {
     window.postMessage(Object.assign({}, message, {
         type: 'WebBluetoothPolyCSToPage',
     }), message.origin || '*');
-})
+});
 
 // Listen for Web Bluetooth Requests
 window.addEventListener('message', event => {
@@ -156,7 +158,7 @@ class DeviceChooserUI {
         this.onPair(this.selectedDeviceId);
     }
 
-    updateDevice(address, name, rssi) {
+    updateDevice(address, name) {
         let deviceElement = this.shadowRoot.querySelector(`.device-item[bluetoothId='${address}']`);
         if (!deviceElement) {
             deviceElement = document.createElement('div');
@@ -167,7 +169,6 @@ class DeviceChooserUI {
             deviceElement.innerText = address.toUpperCase();
             deviceElement.addEventListener('click', () => this.selectDevice(address, deviceElement));
             deviceElement.addEventListener('keydown', e => {
-                console.log('keydown', e);
                 if (e.keyCode === 13 || e.keyCode === 32) {
                     this.selectDevice(address, deviceElement);
                 }

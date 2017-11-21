@@ -1,4 +1,6 @@
-module.exports = function (wallaby) {
+/* eslint-env node */
+
+module.exports = function () {
     return {
         files: [
             'extension/*.js',
@@ -10,7 +12,7 @@ module.exports = function (wallaby) {
 
         env: {
             type: 'node',
-            runner: 'node'
+            runner: 'node',
         },
 
         testFramework: 'jest',
@@ -20,7 +22,8 @@ module.exports = function (wallaby) {
                 const vm = require('vm');
                 const createContext = vm.createContext;
                 const runInNewContext = vm.Script.prototype.runInNewContext;
-                const wallabyGlobals = {$_$wp, $_$wpe, $_$w, $_$wf, $_$wv, $_$tracer};
+                // eslint-disable-next-line no-undef
+                const wallabyGlobals = { $_$wp, $_$wpe, $_$w, $_$wf, $_$wv, $_$tracer };
                 vm.createContext = function () {
                     arguments[0] = Object.assign(arguments[0], wallabyGlobals);
                     return createContext.apply(this, arguments);
@@ -31,6 +34,6 @@ module.exports = function (wallaby) {
                 };
                 global._vmPatched = true;
             }
-        }
+        },
     };
 };

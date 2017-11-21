@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+
 const nativePort = chrome.runtime.connectNative('org.urish.web_bluetooth.server');
 let debugPrints = false;
 
@@ -8,7 +10,7 @@ async function nativeRequest(cmd, params) {
         requests[requestId] = { resolve, reject };
         const msg = Object.assign(params || {}, {
             cmd,
-            _id: requestId++
+            _id: requestId++,
         });
         if (debugPrints) {
             console.log('Sent native message:', msg);
@@ -56,7 +58,7 @@ let portsObjects = new WeakMap();
 const characteristicCache = {};
 
 nativePort.onDisconnect.addListener(() => {
-    console.log("Disconnected!", chrome.runtime.lastError.message);
+    console.log('Disconnected!', chrome.runtime.lastError.message);
 });
 
 function leftPad(s, count, pad) {
@@ -181,7 +183,7 @@ async function requestDevice(port, options) {
         return {
             address: deviceAddress,
             __rssi: deviceRssi[deviceAddress],
-            name: deviceNames[deviceAddress]
+            name: deviceNames[deviceAddress],
         };
     } finally {
         stopScanning(port);
@@ -190,8 +192,8 @@ async function requestDevice(port, options) {
 }
 
 async function gattConnect(port, address) {
-    // Security measure: make sure this device address has been previously returned
-    // by requestDevice()
+    /* Security measure: make sure this device address has been
+       previously returned by requestDevice() */
     if (!portsObjects.get(port).knownDeviceIds.has(address)) {
         throw new Error('Unknown device address');
     }
@@ -229,7 +231,7 @@ async function getPrimaryServices(port, gattId, service) {
 }
 
 async function getCharacteristic(port, gattId, service, characteristic) {
-    const char = (await getCharacteristics(port, gattId, service, characteristic)).find(x => true);
+    const char = (await getCharacteristics(port, gattId, service, characteristic)).find(() => true);
     if (!char) {
         throw new Error(`Characteristic ${characteristic} not found`);
     }
@@ -241,15 +243,16 @@ async function getCharacteristics(port, gattId, service, characteristic) {
         characteristicCache[gattId] = {};
     }
     if (!characteristicCache[gattId][service]) {
-        characteristicCache[gattId][service] = nativeRequest('characteristics', { 
-            device: gattId, 
-            service: windowsServiceUuid(service) 
+        characteristicCache[gattId][service] = nativeRequest('characteristics', {
+            device: gattId,
+            service: windowsServiceUuid(service),
         });
     }
     const result = await characteristicCache[gattId][service];
     const characterstics = result.map(c => Object.assign({}, c, { uuid: normalizeCharacteristicUuid(c.uuid) }));
     if (characteristic) {
-        return characterstics.filter(c => normalizeCharacteristicUuid(c.uuid) == normalizeCharacteristicUuid(characteristic))
+        return characterstics
+            .filter(c => normalizeCharacteristicUuid(c.uuid) == normalizeCharacteristicUuid(characteristic));
     } else {
         return characterstics;
     }
@@ -259,7 +262,7 @@ async function readValue(port, gattId, service, characteristic) {
     return await nativeRequest('read', {
         device: gattId,
         service: windowsServiceUuid(service),
-        characteristic: windowsCharacteristicUuid(characteristic)
+        characteristic: windowsCharacteristicUuid(characteristic),
     });
 }
 
@@ -272,7 +275,7 @@ async function writeValue(port, gattId, service, characteristic, value) {
         device: gattId,
         service: windowsServiceUuid(service),
         characteristic: windowsCharacteristicUuid(characteristic),
-        value
+        value,
     });
 }
 
@@ -280,7 +283,7 @@ async function startNotifications(port, gattId, service, characteristic) {
     const subscriptionId = await nativeRequest('subscribe', {
         device: gattId,
         service: windowsServiceUuid(service),
-        characteristic: windowsCharacteristicUuid(characteristic)
+        characteristic: windowsCharacteristicUuid(characteristic),
     });
 
     subscriptions[subscriptionId] = port;
@@ -298,7 +301,7 @@ const exportedMethods = {
     getCharacteristics,
     readValue,
     writeValue,
-    startNotifications
+    startNotifications,
 };
 
 chrome.runtime.onConnect.addListener((port) => {
@@ -332,7 +335,7 @@ chrome.runtime.onConnect.addListener((port) => {
         if (fn) {
             fn(port, ...request.args)
                 .then(result => sendResponse({ result }))
-                .catch(error => sendResponse({ error: error.toString() }))
+                .catch(error => sendResponse({ error: error.toString() }));
             return true;
         } else {
             sendResponse({ error: 'Unknown command: ' + request.command });

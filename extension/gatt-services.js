@@ -1,4 +1,5 @@
 // List taken from https://chromium.googlesource.com/chromium/src/+/master/third_party/WebKit/Source/modules/bluetooth/BluetoothUUID.cpp
+// eslint-disable-next-line no-unused-vars
 const STANDARD_GATT_SERVICES = {
     generic_access: 0x1800,
     generic_attribute: 0x1801,

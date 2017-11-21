@@ -1,4 +1,8 @@
 // List taken from https://chromium.googlesource.com/chromium/src/+/master/third_party/WebKit/Source/modules/bluetooth/BluetoothUUID.cpp
+
+/* eslint-disable quote-props */
+
+// eslint-disable-next-line no-unused-vars
 const STANDARD_GATT_CHARACTERISTICS = {
     'gap.device_name': 0x2A00,
     'gap.appearance': 0x2A01,

@@ -1,4 +1,7 @@
+/* global navigator, window, Zone */
+
 if (!navigator.bluetooth) {
+    // eslint-disable-next-line no-console
     console.log('Windows 10 Web Bluetooth Polyfill loaded');
 
     (function () {
@@ -49,7 +52,7 @@ if (!navigator.bluetooth) {
                     command,
                     args,
                 }, '*');
-            })
+            });
         }
 
         // Implmentation reference: https://developer.mozilla.org/en/docs/Web/API/EventTarget
@@ -98,8 +101,8 @@ if (!navigator.bluetooth) {
             }
         }
 
-        const subscriptionId = Symbol("subscriptionId");
-        const notificationsStarted = Symbol("notificationsStarted");
+        const subscriptionId = Symbol('subscriptionId');
+        const notificationsStarted = Symbol('notificationsStarted');
         class BluetoothRemoteGATTCharacteristic extends BluetoothEventTarget {
             constructor(service, uuid, properties) {
                 super();
@@ -113,11 +116,11 @@ if (!navigator.bluetooth) {
                 return this.service.device.gatt._connection;
             }
 
-            async getDescriptor(descriptor) {
+            async getDescriptor(/* descriptor */) {
                 throw new Error('Not implemented');
             }
 
-            async getDescriptors(descriptor) {
+            async getDescriptors(/* descriptor */) {
                 throw new Error('Not implemented');
             }
 
@@ -126,7 +129,7 @@ if (!navigator.bluetooth) {
                 this.value = new DataView(new Uint8Array(result).buffer);
                 this.dispatchEvent({
                     type: 'characteristicvaluechanged',
-                    bubbles: true
+                    bubbles: true,
                 });
                 return this.value;
             }
@@ -144,7 +147,8 @@ if (!navigator.bluetooth) {
                 this[notificationsStarted] = true;
 
                 try {
-                    this[subscriptionId] = await callExtension('startNotifications', [this._connection, this.service.uuid, this.uuid]);
+                    this[subscriptionId] = await callExtension('startNotifications',
+                        [this._connection, this.service.uuid, this.uuid]);
                 } catch (err) {
                     this[notificationsStarted] = false;
                     throw err;
@@ -153,7 +157,7 @@ if (!navigator.bluetooth) {
                     this.value = new DataView(new Uint8Array(event.value).buffer);
                     this.dispatchEvent({
                         type: 'characteristicvaluechanged',
-                        bubbles: true
+                        bubbles: true,
                     });
                 };
                 return this;
@@ -178,21 +182,24 @@ if (!navigator.bluetooth) {
             }
 
             async getCharacteristic(characteristic) {
-                let { uuid, properties } = await callExtension('getCharacteristic', [this.device.gatt._connection, this.uuid, characteristic]);
+                let { uuid, properties } = await callExtension('getCharacteristic',
+                    [this.device.gatt._connection, this.uuid, characteristic]);
                 return new BluetoothRemoteGATTCharacteristic(this, uuid, properties);
             }
 
             async getCharacteristics(characteristic) {
-                let result = await callExtension('getCharacteristics', [this.device.gatt._connection, this.uuid, characteristic]);
-                return result.map(({ uuid, properties }) => new BluetoothRemoteGATTCharacteristic(this, uuid, properties));
+                let result = await callExtension('getCharacteristics',
+                    [this.device.gatt._connection, this.uuid, characteristic]);
+                return result.map(({ uuid, properties }) =>
+                    new BluetoothRemoteGATTCharacteristic(this, uuid, properties));
             }
 
-            async getIncludedService(service) {
+            async getIncludedService(/* service */) {
                 // TODO implement
                 throw new Error('Not implemented');
             }
 
-            async getIncludedServices(service) {
+            async getIncludedServices(/* service */) {
                 // TODO implement
                 throw new Error('Not implemented');
             }
@@ -260,7 +267,7 @@ if (!navigator.bluetooth) {
             requestDevice: async function (...args) {
                 let result = await callExtension('requestDevice', args);
                 return new BluetoothDevice(result.address, result.name);
-            }
+            },
         };
     })();
 }

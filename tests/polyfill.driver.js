@@ -1,4 +1,5 @@
-const vm = require('vm');
+/* eslint-env node, jest */
+
 const EventTarget = require('event-target-shim');
 const { ChromeEventTarget, loadScript } = require('./test-utils');
 const polyfillScript = loadScript('../extension/polyfill');
@@ -17,9 +18,9 @@ class PolyfillDriver {
             onMessage: new ChromeEventTarget(),
             postMessage: msg => {
                 window.postMessage(Object.assign({}, msg, {
-                    type: 'WebBluetoothPolyCSToPage'
+                    type: 'WebBluetoothPolyCSToPage',
                 }));
-            }
+            },
         };
         this.window = window;
         this.port = port;
@@ -28,15 +29,16 @@ class PolyfillDriver {
                 port.onMessage.dispatch(JSON.parse(JSON.stringify(event.data)));
             }
         });
-        window.postMessage = function (message, origin) {
-            this.dispatchEvent({ 'type': 'message', data: message, source: this });
-        }
+        window.postMessage = function (message/* , origin */) {
+            this.dispatchEvent({ type: 'message', data: message, source: this });
+        };
         const mockConsole = {
             log: jest.fn((...args) => {
                 if (args[0] !== 'Windows 10 Web Bluetooth Polyfill loaded') {
+                    // eslint-disable-next-line no-console
                     console.log(...args);
                 }
-            })
+            }),
         };
         polyfillScript.runInNewContext({ window, navigator, console: mockConsole });
         this._background._onConnect.dispatch(port);

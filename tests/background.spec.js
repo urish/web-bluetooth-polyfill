@@ -1,3 +1,5 @@
+/* eslint-env node, jest */
+
 const { BackgroundDriver } = require('./background.driver');
 
 describe('background script', () => {

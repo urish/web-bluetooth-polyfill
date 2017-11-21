@@ -1,3 +1,5 @@
+/* eslint-env node, jest */
+
 const { BackgroundDriver } = require('./background.driver');
 const { PolyfillDriver } = require('./polyfill.driver');
 const { tick } = require('./test-utils');
@@ -22,7 +24,7 @@ describe('requestDevice', () => {
         });
 
         const devicePromise = bluetooth.requestDevice({
-            filters: [{ 'name': 'test-device' }]
+            filters: [{ 'name': 'test-device' }],
         });
 
         await tick();
@@ -56,7 +58,7 @@ describe('requestDevice', () => {
         });
 
         const devicePromise = bluetooth.requestDevice({
-            filters: [{ 'name': 'test-device' }]
+            filters: [{ 'name': 'test-device' }],
         });
 
         await tick();
@@ -87,8 +89,8 @@ describe('requestDevice', () => {
             stopScan: stopScanMock,
         });
 
-        const devicePromise = bluetooth.requestDevice({
-            filters: [{ 'name': 'test-device' }]
+        bluetooth.requestDevice({
+            filters: [{ 'name': 'test-device' }],
         });
 
         await tick();
