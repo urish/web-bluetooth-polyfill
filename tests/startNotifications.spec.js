@@ -20,7 +20,7 @@ describe('startNotifications', () => {
 
         const service = await device.gatt.getPrimaryService(0xffe0);
         const characteristic = await service.getCharacteristic(0xf00f);
-        
+
         let messageReceived = false;
         background.autoRespond({
             'subscribe': msg => {
