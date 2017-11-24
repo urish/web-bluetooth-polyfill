@@ -164,7 +164,8 @@ if (!navigator.bluetooth) {
             }
 
             async stopNotifications() {
-                // TODO implement
+                this[subscriptionId] = await callExtension('stopNotifications',
+                    [this._connection, this.service.uuid, this.uuid]);
                 delete activeSubscriptions[this[subscriptionId]];
                 this[subscriptionId] = null;
                 this[notificationsStarted] = false;

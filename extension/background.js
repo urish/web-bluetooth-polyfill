@@ -291,6 +291,18 @@ async function startNotifications(port, gattId, service, characteristic) {
     return subscriptionId;
 }
 
+async function stopNotifications(port, gattId, service, characteristic) {
+    const subscriptionId = await nativeRequest('unsubscribe', {
+        device: gattId,
+        service: windowsServiceUuid(service),
+        characteristic: windowsCharacteristicUuid(characteristic),
+    });
+
+    delete subscriptions[subscriptionId];
+    portsObjects.get(port).subscriptions.delete(subscriptionId);
+    return subscriptionId;
+}
+
 const exportedMethods = {
     requestDevice,
     gattConnect,
@@ -302,6 +314,7 @@ const exportedMethods = {
     readValue,
     writeValue,
     startNotifications,
+    stopNotifications,
 };
 
 chrome.runtime.onConnect.addListener((port) => {
