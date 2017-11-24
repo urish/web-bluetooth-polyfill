@@ -3,7 +3,7 @@
 const { BackgroundDriver } = require('./background.driver');
 const { PolyfillDriver } = require('./polyfill.driver');
 
-describe('startNotification', () => {
+describe('startNotifications', () => {
     it('should set up notifications on the device', async () => {
         const background = new BackgroundDriver();
         const polyfill = new PolyfillDriver(background);
@@ -20,9 +20,11 @@ describe('startNotification', () => {
 
         const service = await device.gatt.getPrimaryService(0xffe0);
         const characteristic = await service.getCharacteristic(0xf00f);
-
+        
+        let messageReceived = false;
         background.autoRespond({
             'subscribe': msg => {
+                messageReceived = true;
                 expect(msg).toEqual(expect.objectContaining({
                     device: 'gattDeviceId',
                     service: '{0000ffe0-0000-1000-8000-00805f9b34fb}',
@@ -36,6 +38,7 @@ describe('startNotification', () => {
         });
 
         let value = await characteristic.startNotifications();
+        expect(messageReceived).toBe(true);
         expect(value).toEqual(characteristic);
     });
 
@@ -56,17 +59,7 @@ describe('startNotification', () => {
         const characteristic = await service.getCharacteristic(0xf00f);
 
         background.autoRespond({
-            'subscribe': msg => {
-                expect(msg).toEqual(expect.objectContaining({
-                    device: 'gattDeviceId',
-                    service: '{0000ffe0-0000-1000-8000-00805f9b34fb}',
-                    characteristic: '{0000f00f-0000-1000-8000-00805f9b34fb}',
-                    cmd: 'subscribe',
-                }));
-                return {
-                    result: 5,
-                };
-            },
+            'subscribe': () => ({ result: 5 }),
         });
 
         await characteristic.startNotifications();
