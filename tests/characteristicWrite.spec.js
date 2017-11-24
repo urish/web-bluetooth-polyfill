@@ -14,28 +14,10 @@ describe('writeValue', () => {
             filters: [{ 'name': 'test-device' }],
         });
 
-        background.autoRespond({
-            'connect': () => ({ result: 'gattDeviceId' }),
-        });
+        background.simulateDevice(0xffe0, 0xf00f, {  writeWithoutResponse: true, write: true });
+
         await device.gatt.connect();
-
-        background.autoRespond({
-            'services': () => ({ result: ['{0000ffe0-0000-1000-8000-00805f9b34fb}'] }),
-        });
         const service = await device.gatt.getPrimaryService(0xffe0);
-
-        background.autoRespond({
-            'characteristics': () => ({
-                result: [{
-                    uuid: '{0000f00f-0000-1000-8000-00805f9b34fb}',
-                    properties: {
-                        broadcast: false, read: false, writeWithoutResponse: true, write: true,
-                        notify: false, indicate: false, authenticatedSignedWrites: false,
-                        reliableWrite: false, writableAuxiliaries: false,
-                    },
-                }],
-            }),
-        });
         const characteristic = await service.getCharacteristic(0xf00f);
 
         background.autoRespond({
@@ -63,28 +45,10 @@ describe('writeValue', () => {
             filters: [{ 'name': 'test-device' }],
         });
 
-        background.autoRespond({
-            'connect': () => ({ result: 'gattDeviceId' }),
-        });
+        background.simulateDevice(0xffe0, 0xf00f, {  writeWithoutResponse: true, write: true });
+
         await device.gatt.connect();
-
-        background.autoRespond({
-            'services': () => ({ result: ['{0000ffe0-0000-1000-8000-00805f9b34fb}'] }),
-        });
         const service = await device.gatt.getPrimaryService(0xffe0);
-
-        background.autoRespond({
-            'characteristics': () => ({
-                result: [{
-                    uuid: '{0000f00f-0000-1000-8000-00805f9b34fb}',
-                    properties: {
-                        broadcast: false, read: false, writeWithoutResponse: true, write: true,
-                        notify: false, indicate: false, authenticatedSignedWrites: false,
-                        reliableWrite: false, writableAuxiliaries: false,
-                    },
-                }],
-            }),
-        });
         const characteristic = await service.getCharacteristic(0xf00f);
 
         let written = false;

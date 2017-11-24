@@ -38,6 +38,17 @@ class BackgroundDriver {
         }
     }
 
+    _expandUuid(uuid) {
+        if (typeof uuid === 'number' && uuid > 0) {
+            uuid = uuid.toString(16);
+            while (uuid.length < 8) {
+                uuid = '0' + uuid;
+            }
+            return `${uuid}-0000-1000-8000-00805f9b34fb`;
+        }
+        return uuid;
+    }
+
     expect(cmd, response) {
         this._expectation = [cmd, response];
     }
@@ -72,6 +83,23 @@ class BackgroundDriver {
                 return { result: null };
             },
             stopScan: () => ({ result: null }),
+        });
+    }
+
+    simulateDevice(serviceUuid, characteristicUuid, properties) {
+        this.autoRespond({
+            'connect': () => ({ result: 'gattDeviceId' }),
+            'services': () => ({ result: [this._expandUuid(serviceUuid)] }),
+            'characteristics': () => ({
+                result: [{
+                    uuid: this._expandUuid(characteristicUuid),
+                    properties: Object.assign({
+                        broadcast: false, read: false, writeWithoutResponse: false, write: false,
+                        notify: false, indicate: false, authenticatedSignedWrites: false,
+                        reliableWrite: false, writableAuxiliaries: false,
+                    }, properties),
+                }],
+            }),
         });
     }
 }
