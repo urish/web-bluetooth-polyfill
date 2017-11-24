@@ -42,12 +42,16 @@ class BackgroundDriver {
         this._expectation = [cmd, response];
     }
 
+    sendMessage(message) {
+        this.nativePort.onMessage.dispatch(message);
+    }
+
     autoRespond(responseTable) {
         this.nativePort.postMessage.mockImplementation(msg => {
             this.lastMessage = msg;
             expect(Object.keys(responseTable)).toContain(msg.cmd);
             const response = responseTable[msg.cmd](msg);
-            this.nativePort.onMessage.dispatch(Object.assign({}, response, {
+            this.sendMessage(Object.assign({}, response, {
                 _id: msg._id,
                 _type: 'response',
             }));
@@ -58,7 +62,7 @@ class BackgroundDriver {
         this.autoRespond({
             scan: () => {
                 setImmediate(() => {
-                    this.nativePort.onMessage.dispatch({
+                    this.sendMessage({
                         _type: 'scanResult',
                         bluetoothAddress: id,
                         localName: name,
