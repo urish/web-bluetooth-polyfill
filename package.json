@@ -1,6 +1,6 @@
 {
   "name": "web-bluetooth-polyfill",
-  "version": "1.0.0",
+  "version": "0.4.0",
   "description": "Web Bluetooth Polyfill",
   "main": "background.js",
   "scripts": {
