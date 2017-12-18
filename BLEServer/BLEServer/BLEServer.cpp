@@ -117,7 +117,7 @@ Concurrency::task<IJsonValue^> disconnectRequest(JsonObject ^command) {
 		bool removed = true;
 		try {
 			auto service = pair->Value->Service;
-			if (service->Device->Equals(device)) {
+			if (service->Device->DeviceId->Equals(device->DeviceId)) {
 				delete service->Device;
 				delete service;
 			}
