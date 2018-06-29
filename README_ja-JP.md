@@ -1,11 +1,11 @@
-# Windows 10 Œü‚¯ Web Bluetooth Polyfill
+# Windows 10 å‘ã‘ Web Bluetooth Polyfill
 
 <!-- The Polyfill enables Web Bluetooth in Chrome on Windows 10.  -->
-Windows10‚ÌChromeã‚ÅA Web Bluetooth ‚ğ—LŒø‚É‚·‚é‚Ì‚ªA‚±‚Ì Polyfill ‚Å‚·B
+Windows10ã®Chromeä¸Šã§ã€ Web Bluetooth ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã®ãŒã€ã“ã® Polyfill ã§ã™ã€‚
 
 [![Build Status](https://travis-ci.org/urish/web-bluetooth-polyfill.png?branch=master)](https://travis-ci.org/urish/web-bluetooth-polyfill)
 
-## ƒCƒ“ƒXƒg[ƒ‹•û–@
+## ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«æ–¹æ³•
 
 <!--
 1. You need to have Windows 10 Creators Update (version 1703 / build 15063) or newer
@@ -20,20 +20,20 @@ Windows10‚ÌChromeã‚ÅA Web Bluetooth ‚ğ—LŒø‚É‚·‚é‚Ì‚ªA‚±‚Ì Polyfill ‚Å‚·B
 10. Run `C:\Program Files (x86)\Web Bluetooth Polyfill\register.cmd` to register the Native Messaging server
 -->
 
-1. “®ìŠÂ‹«‚Æ‚µ‚ÄAWindows 10 Creators Update (version 1703 / build 15063) ˆÈã‚ª•K—v‚Å‚·Bi–ó’Fˆê˜A‚ÌƒCƒ“ƒXƒg[ƒ‹ì‹Æ‚É‚ÍAƒ†[ƒU[‚ÉŠÇ—ÒŒ ŒÀ‚ª•K—v‚Å‚·Bj
-2. [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145) ‚ªƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚Ä‚¢‚È‚¯‚ê‚ÎAƒCƒ“ƒXƒg[ƒ‹‚µ‚Ü‚·B
-3. git‚ÅƒNƒ[ƒ“‚ğæ“¾‚µ‚Ü‚·Bæ“¾ƒRƒ}ƒ“ƒh: `git clone https://github.com/urish/web-bluetooth-polyfill` (–ó’F‚à‚µ‚­‚ÍA[ZIPƒtƒ@ƒCƒ‹](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip)‚ğƒ_ƒEƒ“ƒ[ƒh‚µA“WŠJ‚µ‚Ü‚·B[master.zip](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip))
-4. Chrome‚ÌŠg’£‹@”\‚ğŠJ‚« (chrome://extensions/) A"ƒfƒxƒƒbƒp[ƒ‚[ƒh"‚ğ—LŒø‚É‚µ‚Ü‚·B (ƒXƒCƒbƒ`‚ªƒy[ƒW‚Ì‰Eã‚É‚ ‚è‚Ü‚·B)
-5. "ƒpƒbƒP[ƒW‰»‚³‚ê‚Ä‚¢‚È‚¢Šg’£‹@”\‚ğ“Ç‚İ‚Ş"‚ÌƒŠƒ“ƒN‚ğƒNƒŠƒbƒN‚µ‚Ü‚·B
-6. æ“¾‚µ‚½ƒNƒ[ƒ““à‚É‚ ‚é `extension` ƒtƒHƒ‹ƒ_[‚ğ‘I‘ğ‚µ‚Ü‚·B(–ó’F‚à‚µ‚­‚ÍAZIPƒtƒ@ƒCƒ‹‚ğ“WŠJ‚µ‚½ƒtƒHƒ‹ƒ_[“à‚Ì `extension` ƒtƒHƒ‹ƒ_[‚ğ‘I‘ğ‚µ‚Ü‚·B)
-7. V‚½‚É’Ç‰Á‚³‚ê‚½Šg’£‹@”\‚ÉŠg’£‹@”\ID‚ª•\¦‚³‚ê‚Ä‚¢‚Ü‚·‚Ì‚ÅAŒã‘±‚Ìè‡‚Åg—p‚µ‚Ü‚·‚Ì‚ÅA‚±‚ÌID‚ğƒƒ‚‚µ‚Ü‚·iƒRƒs[‰ÂjBID‚ÍA’·‚¢‰pš‚Ì•¶š—ñ‚Å‚·(‚·‚×‚Ä¬•¶š)B—áF `mfjncijdfecdpkfldkechgoadojddehp`
-8. ÅV‚Ì [BLEServer](https://github.com/urish/web-bluetooth-polyfill/releases/) ‚ğƒ_ƒEƒ“ƒ[ƒh‚µA“WŠJ‚µ‚Ü‚·B“WŠJ‚µ‚½ƒtƒHƒ‹ƒ_[“à‚Ìƒtƒ@ƒCƒ‹‚ğ `C:\Program Files (x86)\Web Bluetooth Polyfill` ‚ÖƒRƒs[‚µ‚Ü‚·B
-9. `C:\Program Files (x86)\Web Bluetooth Polyfill\manifest.json` ‚ğ•ÒW‚µA `allowed_origins` ƒZƒNƒVƒ‡ƒ““à‚É‹Lq‚³‚ê‚Ä‚¢‚éŠg’£‹@”\ID‚ğ‘Oq‚Åƒƒ‚‚µ‚½ID‚É’u‚«Š·‚¦A•Û‘¶‚µ‚Ü‚·B
-10. `C:\Program Files (x86)\Web Bluetooth Polyfill\register.cmd` ‚ğÀs‚·‚é‚ÆAŠg’£‹@”\‚ªƒŒƒWƒXƒgƒŠ[‚É“o˜^‚³‚ê‚Ü‚·B
+1. å‹•ä½œç’°å¢ƒã¨ã—ã¦ã€Windows 10 Creators Update (version 1703 / build 15063) ä»¥ä¸ŠãŒå¿…è¦ã§ã™ã€‚ï¼ˆè¨³æ³¨ï¼šä¸€é€£ã®ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ä½œæ¥­ã«ã¯ã€ãƒ¦ãƒ¼ã‚¶ãƒ¼ã«ç®¡ç†è€…æ¨©é™ãŒå¿…è¦ã§ã™ã€‚ï¼‰
+2. [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145) ãŒã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã¦ã„ãªã‘ã‚Œã°ã€ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã—ã¾ã™ã€‚
+3. gitã§ã‚¯ãƒ­ãƒ¼ãƒ³ã‚’å–å¾—ã—ã¾ã™ã€‚å–å¾—ã‚³ãƒãƒ³ãƒ‰: `git clone https://github.com/urish/web-bluetooth-polyfill` (è¨³æ³¨ï¼šã‚‚ã—ãã¯ã€[ZIPãƒ•ã‚¡ã‚¤ãƒ«](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip)ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã€å±•é–‹ã—ã¾ã™ã€‚ã“ã®ãƒ•ã‚¡ã‚¤ãƒ«â‡’[master.zip](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip)
+4. Chromeã®æ‹¡å¼µæ©Ÿèƒ½ã‚’é–‹ã (`chrome://extensions/`) ã€"ãƒ‡ãƒ™ãƒ­ãƒƒãƒ‘ãƒ¼ãƒ¢ãƒ¼ãƒ‰"ã‚’æœ‰åŠ¹ã«ã—ã¾ã™ã€‚ (ã‚¹ã‚¤ãƒƒãƒãŒãƒšãƒ¼ã‚¸ã®å³ä¸Šã«ã‚ã‚Šã¾ã™ã€‚)
+5. "ãƒ‘ãƒƒã‚±ãƒ¼ã‚¸åŒ–ã•ã‚Œã¦ã„ãªã„æ‹¡å¼µæ©Ÿèƒ½ã‚’èª­ã¿è¾¼ã‚€"ã®ãƒªãƒ³ã‚¯ã‚’ã‚¯ãƒªãƒƒã‚¯ã—ã¾ã™ã€‚
+6. å–å¾—ã—ãŸã‚¯ãƒ­ãƒ¼ãƒ³å†…ã«ã‚ã‚‹ `extension` ãƒ•ã‚©ãƒ«ãƒ€ãƒ¼ã‚’é¸æŠã—ã¾ã™ã€‚(è¨³æ³¨ï¼šã‚‚ã—ãã¯ã€ZIPãƒ•ã‚¡ã‚¤ãƒ«ã‚’å±•é–‹ã—ãŸãƒ•ã‚©ãƒ«ãƒ€ãƒ¼å†…ã® `extension` ãƒ•ã‚©ãƒ«ãƒ€ãƒ¼ã‚’é¸æŠã—ã¾ã™ã€‚)
+7. æ–°ãŸã«è¿½åŠ ã•ã‚ŒãŸæ‹¡å¼µæ©Ÿèƒ½ã«æ‹¡å¼µæ©Ÿèƒ½IDãŒè¡¨ç¤ºã•ã‚Œã¦ã„ã¾ã™ã®ã§ã€å¾Œç¶šã®æ‰‹é †ã§ä½¿ç”¨ã—ã¾ã™ã®ã§ã€ã“ã®IDã‚’ãƒ¡ãƒ¢ã—ã¾ã™ï¼ˆã‚³ãƒ”ãƒ¼å¯ï¼‰ã€‚IDã¯ã€é•·ã„è‹±å­—ã®æ–‡å­—åˆ—(ã™ã¹ã¦å°æ–‡å­—)ã§ã™ã€‚ä¾‹ï¼š `mfjncijdfecdpkfldkechgoadojddehp`
+8. æœ€æ–°ã® [BLEServer](https://github.com/urish/web-bluetooth-polyfill/releases/) ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã€å±•é–‹ã—ã¾ã™ã€‚å±•é–‹ã—ãŸãƒ•ã‚©ãƒ«ãƒ€ãƒ¼å†…ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ `C:\Program Files (x86)\Web Bluetooth Polyfill` ã¸ã‚³ãƒ”ãƒ¼ã—ã¾ã™ã€‚
+9. `C:\Program Files (x86)\Web Bluetooth Polyfill\manifest.json` ã‚’ç·¨é›†ã—ã€ `allowed_origins` ã‚»ã‚¯ã‚·ãƒ§ãƒ³å†…ã«è¨˜è¿°ã•ã‚Œã¦ã„ã‚‹æ‹¡å¼µæ©Ÿèƒ½IDã‚’å‰è¿°ã§ãƒ¡ãƒ¢ã—ãŸIDã«ç½®ãæ›ãˆã€ä¿å­˜ã—ã¾ã™ã€‚
+10. `C:\Program Files (x86)\Web Bluetooth Polyfill\register.cmd` ã‚’å®Ÿè¡Œã™ã‚‹ã¨ã€æ‹¡å¼µæ©Ÿèƒ½ãŒãƒ¬ã‚¸ã‚¹ãƒˆãƒªãƒ¼ã«ç™»éŒ²ã•ã‚Œã¾ã™ã€‚
 
 That's it! Enjoy Web Bluetooth on Windows :-)
 
-## ƒgƒ‰ƒuƒ‹ƒVƒ…[ƒeƒBƒ“ƒO
+## ãƒˆãƒ©ãƒ–ãƒ«ã‚·ãƒ¥ãƒ¼ãƒ†ã‚£ãƒ³ã‚°
 
 1. Run the `winver` program to verify that you have Windows 10 Creators Update. It should display: "Version 1703 (OS Build 15063.413)" or higher.
 2. Try to running `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` manually. If an error message containing something like `"VCRUNTIME140.dll is missing"` appears, install [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145). Then launch `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` one more time. If a black window containing `{"_type":"Start"}` appears, then the BLEServer is working correctly. Although since Windows 10 build 1709 it can still be blocked from running by Windows Defender SmartScreen so Chrome won't be able to start it by itself. You may disable SmartScreen for applications and programs in Windows Defender settings. It's also worth making sure that `Web Bluetooth Polyfill` folder and files inside have window's users permissions for read, write and execution ( right click -> properties -> security ).
