@@ -22,9 +22,9 @@ Windows10のChrome上で、 Web Bluetooth を有効にするのが、この Poly
 
 1. 動作環境として、Windows 10 Creators Update (version 1703 / build 15063) 以上が必要です。（訳注：一連のインストール作業には、ユーザーに管理者権限が必要です。）
 2. [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145) がインストールされていなければ、インストールします。
-3. gitでクローンを取得します。取得コマンド: `git clone https://github.com/urish/web-bluetooth-polyfill` (訳注：もしくは、[ZIPファイル](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip)をダウンロードし、展開します。このファイル⇒[master.zip](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip)
+3. gitでクローンを取得します。取得コマンド: `git clone https://github.com/urish/web-bluetooth-polyfill` (訳注：もしくは、[ZIPファイル(master.zip)](https://github.com/urish/web-bluetooth-polyfill/archive/master.zip)をダウンロードし、展開します。)
 4. Chromeの拡張機能を開き (`chrome://extensions/`) 、"デベロッパーモード"を有効にします。 (スイッチがページの右上にあります。)
-5. "パッケージ化されていない拡張機能を読み込む"のリンクをクリックします。
+5. "パッケージ化されていない拡張機能を読み込む"のリンクボタンをクリックします。
 6. 取得したクローン内にある `extension` フォルダーを選択します。(訳注：もしくは、ZIPファイルを展開したフォルダー内の `extension` フォルダーを選択します。)
 7. 新たに追加された拡張機能に拡張機能IDが表示されていますので、後続の手順で使用しますので、このIDをメモします（コピー可）。IDは、長い英字の文字列(すべて小文字)です。例： `mfjncijdfecdpkfldkechgoadojddehp`
 8. 最新の [BLEServer](https://github.com/urish/web-bluetooth-polyfill/releases/) をダウンロードし、展開します。展開したフォルダー内のファイルを `C:\Program Files (x86)\Web Bluetooth Polyfill` へコピーします。
