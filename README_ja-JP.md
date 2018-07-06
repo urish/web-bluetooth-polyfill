@@ -26,46 +26,24 @@ Windows10のChrome上で、 Web Bluetooth を有効にするのが、この Poly
 4. Chromeの拡張機能を開き (`chrome://extensions/`) 、"デベロッパーモード"を有効にします。 (スイッチがページの右上にあります。)
 5. "パッケージ化されていない拡張機能を読み込む"のリンクボタンをクリックします。
 6. 取得したクローン内にある `extension` フォルダーを選択します。(訳注：もしくは、ZIPファイルを展開したフォルダー内の `extension` フォルダーを選択します。)
-7. 新たに追加された拡張機能に拡張機能IDが表示されていますので、後続の手順で使用しますので、このIDをメモします（コピー可）。IDは、長い英字の文字列(すべて小文字)です。例： `mfjncijdfecdpkfldkechgoadojddehp`
-8. 最新の [BLEServer](https://github.com/urish/web-bluetooth-polyfill/releases/) をダウンロードし、展開します。展開したフォルダー内のファイルを `C:\Program Files (x86)\Web Bluetooth Polyfill` へコピーします。
-9. `C:\Program Files (x86)\Web Bluetooth Polyfill\manifest.json` を編集し、 `allowed_origins` セクション内に記述されている拡張機能IDを前述でメモしたIDに置き換え、保存します。
-10. `C:\Program Files (x86)\Web Bluetooth Polyfill\register.cmd` を実行すると、拡張機能がレジストリーに登録されます。
+7. 新たに追加された拡張機能に拡張機能IDが表示されていますので、このIDをメモします（コピー可）。このIDは、後続の手順で使用します。IDは、長い英字の文字列(すべて小文字)です。例： `mfjncijdfecdpkfldkechgoadojddehp`
+8. 最新の [BLEServer](https://github.com/urish/web-bluetooth-polyfill/releases/) をダウンロードし、展開します。展開したフォルダー内のファイルを `C:\Program Files (x86)\Web Bluetooth Polyfill` へコピーします。（訳注：管理者実行権限が必要です。）
+9. `C:\Program Files (x86)\Web Bluetooth Polyfill\manifest.json` を編集し、 `allowed_origins` セクション内に記述されている拡張機能IDを前述でメモしたIDに置き換え、保存します。（訳注：管理者実行権限が必要です。）
+10. `C:\Program Files (x86)\Web Bluetooth Polyfill\register.cmd` を実行すると、拡張機能がレジストリーに登録されます。（訳注：「管理者として実行...」で実行します。）
 
 That's it! Enjoy Web Bluetooth on Windows :-)
 
-## トラブルシューティング
+## トラブルシューティング(Troubleshooting)
 
-1. Run the `winver` program to verify that you have Windows 10 Creators Update. It should display: "Version 1703 (OS Build 15063.413)" or higher.
-2. Try to running `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` manually. If an error message containing something like `"VCRUNTIME140.dll is missing"` appears, install [Visual C++ Redistributable for Visual Studio 2015 (x86)](https://www.microsoft.com/en-us/download/details.aspx?id=48145). Then launch `C:\Program Files (x86)\Web Bluetooth Polyfill\BLEServer.exe` one more time. If a black window containing `{"_type":"Start"}` appears, then the BLEServer is working correctly. Although since Windows 10 build 1709 it can still be blocked from running by Windows Defender SmartScreen so Chrome won't be able to start it by itself. You may disable SmartScreen for applications and programs in Windows Defender settings. It's also worth making sure that `Web Bluetooth Polyfill` folder and files inside have window's users permissions for read, write and execution ( right click -> properties -> security ).
-3. Make sure "Experimental Web Platform Features" flag is *disabled*. You can set it using this link: chrome://flags/#enable-experimental-web-platform-features
-4. Open the Devtools console of any web page, and look for the message: "Windows 10 Web Bluetooth Polyfill loaded". If you don't see this message, it means that either the extension was not installed correctly, or you already have something setting the `navigator.bluetooth` object to some value.
-5. Follow the [instructions here](https://github.com/urish/web-bluetooth-polyfill/issues/21#issuecomment-308990559) to debug the background page of the extension.
+⇒ [README.md(英語)](https://github.com/urish/web-bluetooth-polyfill/blob/master/README.md)の`Troubleshooting`を参照してください。
 
-## Current State
+## 現在の開発状況(Current State)
 
-TL;DR - Should work out of the box with most Web Bluetooth apps.
+⇒ [README.md(英語)](https://github.com/urish/web-bluetooth-polyfill/blob/master/README.md)の`Current State`を参照してください。
 
-Most of the functionality is already there, but there might be slight differences between the current implementation and the spec. Device Chooser UI is still missing, so the first matching device is picked up automatically. Check out the [list of issues](https://github.com/urish/web-bluetooth-polyfill/issues) to see what is currently still missing. Pull Requests are very welcome!
+## テストの実行方法
 
-List of API methods / events and their implementation status:
-
-- [X] requestDevice
-- [X] Device Chooser UI 
-- [X] gatt.connect
-- [X] gatt.disconnect
-- [X] gattserverdisconnected event
-- [ ] serviceadded / servicechanged / serviceremoved events ([#3](https://github.com/urish/web-bluetooth-polyfill/issues/3))
-- [X] getPrimaryService / getPrimaryServices
-- [X] getCharacteristic / getCharacteristics
-- [X] writeValue
-- [X] readValue
-- [X] startNotifications / characteristicvaluechanged event
-- [x] stopNotifications
-- [ ] getIncludedService / getIncludedServices ([#5](https://github.com/urish/web-bluetooth-polyfill/issues/5))
-- [ ] getDescriptor / getDescriptors ([#6](https://github.com/urish/web-bluetooth-polyfill/issues/6))
-
-## Running tests
-
+<!--
 If you want to run tests, during local development, you will need [node.js](https://nodejs.org/en/) and [yarn](https://yarnpkg.com/en/). Then, run the following commands:
 
     yarn
@@ -75,4 +53,14 @@ You can also run the tests in watch mode, which will only run tests related to f
 
     yarn run test:watch
 
+-->
 
+ローカルの開発環境でテストを実行する場合、[node.js](https://nodejs.org/en/) と [yarn](https://yarnpkg.com/en/)のインストールが必要です。
+インストール後、次のコマンドでテストを実行します。
+
+    yarn
+    yarn test
+    
+You can also run the tests in watch mode, which will only run tests related to files changed since the last commit:
+
+    yarn run test:watch
