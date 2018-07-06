@@ -35,11 +35,11 @@ That's it! Enjoy Web Bluetooth on Windows :-)
 
 ## トラブルシューティング(Troubleshooting)
 
-⇒ [README.md(英語)](https://github.com/urish/web-bluetooth-polyfill/blob/master/README.md)の`Troubleshooting`を参照してください。
+⇒ [Troubleshooting (英語)](https://github.com/urish/web-bluetooth-polyfill/blob/master/README.md#troubleshooting)]を参照してください。
 
 ## 現在の開発状況(Current State)
 
-⇒ [README.md(英語)](https://github.com/urish/web-bluetooth-polyfill/blob/master/README.md)の`Current State`を参照してください。
+⇒ [Current State (英語)](https://github.com/urish/web-bluetooth-polyfill/blob/master/README.md#current-state)]を参照してください。
 
 ## テストの実行方法
 
