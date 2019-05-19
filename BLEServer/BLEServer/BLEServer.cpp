@@ -295,7 +295,7 @@ concurrency::task<IJsonValue^> subscribeRequest(JsonObject ^command) {
 		}
 	}
 	else {
-			throw ref new FailureException("Operation not supported.");
+		throw ref new FailureException("Operation not supported.");
 	}
 
 	auto key = characteristicKey(command);
