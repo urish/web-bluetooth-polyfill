@@ -278,10 +278,24 @@ unsigned long nextSubscriptionId = 1;
 concurrency::task<IJsonValue^> subscribeRequest(JsonObject ^command) {
 	auto characteristic = co_await getCharacteristic(command);
 
-	auto status = co_await characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(Bluetooth::GenericAttributeProfile::GattClientCharacteristicConfigurationDescriptorValue::Notify);
-	if (status != Bluetooth::GenericAttributeProfile::GattCommunicationStatus::Success)
-	{
-		throw ref new FailureException(status.ToString());
+	auto props = (unsigned int)characteristic->CharacteristicProperties;
+
+	if (props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Notify) {
+		auto status = co_await characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(Bluetooth::GenericAttributeProfile::GattClientCharacteristicConfigurationDescriptorValue::Notify);
+		if (status != Bluetooth::GenericAttributeProfile::GattCommunicationStatus::Success)
+		{
+			throw ref new FailureException(status.ToString());
+		}
+	}
+	else if (props & (unsigned int)Bluetooth::GenericAttributeProfile::GattCharacteristicProperties::Indicate) {
+		auto status = co_await characteristic->WriteClientCharacteristicConfigurationDescriptorAsync(Bluetooth::GenericAttributeProfile::GattClientCharacteristicConfigurationDescriptorValue::Indicate);
+		if (status != Bluetooth::GenericAttributeProfile::GattCommunicationStatus::Success)
+		{
+			throw ref new FailureException(status.ToString());
+		}
+	}
+	else {
+		throw ref new FailureException("Operation not supported.");
 	}
 
 	auto key = characteristicKey(command);
