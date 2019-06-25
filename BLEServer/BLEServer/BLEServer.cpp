@@ -25,8 +25,11 @@
 #include <io.h>  
 
 using namespace Platform;
+using namespace Windows::Foundation::Collections;
 using namespace Windows::Devices;
+using namespace Windows::Devices::Radios;
 using namespace Windows::Data::Json;
+using namespace concurrency;
 
 Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher^ bleAdvertisementWatcher;
 auto devices = ref new Collections::Map<String^, Bluetooth::BluetoothLEDevice^>();
@@ -463,10 +466,56 @@ int main(Array<String^>^ args) {
 		// TODO manfuacturer data / flags / data sections ?
 		writeObject(msg);
 	});
+	
+	// Added the ability to track the BLE Radio State
+	auto getRadiosOperation = Radio::GetRadiosAsync();
+	create_task(getRadiosOperation).then(
+		[](task<IVectorView<Radio^>^> asyncInfo)
+		{
+			auto radios = asyncInfo.get();
+			for (Windows::Devices::Radios::Radio^ radio : radios)
+			{
+				if (radio->Kind == RadioKind::Bluetooth)
+				{
+					if (radio->State == Windows::Devices::Radios::RadioState::On)
+					{
+						// Ble Radio On
+						JsonObject^ msg = ref new JsonObject();
+						msg->Insert("_type", JsonValue::CreateStringValue("Start"));
+						writeObject(msg);
+					}
+					else
+					{
+						// Ble Radio Off
+						JsonObject^ msg = ref new JsonObject();
+						msg->Insert("_type", JsonValue::CreateStringValue("Stop"));
+						writeObject(msg);
+					}
 
-	JsonObject^ msg = ref new JsonObject();
-	msg->Insert("_type", JsonValue::CreateStringValue("Start"));
-	writeObject(msg);
+					radio->StateChanged += ref new Windows::Foundation::TypedEventHandler<Windows::Devices::Radios::Radio^, Platform::Object^>(
+						[](Windows::Devices::Radios::Radio^ sender, Platform::Object^ args)
+						{
+							if (sender->State == Windows::Devices::Radios::RadioState::On)
+							{
+								// Ble Radio Switched On
+								JsonObject^ msg = ref new JsonObject();
+								msg->Insert("_type", JsonValue::CreateStringValue("Start"));
+								writeObject(msg);
+							}
+							else
+							{
+								// Ble Radio Switched Off
+								JsonObject^ msg = ref new JsonObject();
+								msg->Insert("_type", JsonValue::CreateStringValue("Stop"));
+								writeObject(msg);
+							}
+						}
+					);
+				}
+			}
+		}
+	);
+
 
 	// Set STDIN / STDOUT to binary mode
 	if ((_setmode(0, _O_BINARY) == -1) || (_setmode(1, _O_BINARY) == -1)) {
