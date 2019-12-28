@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/urish/web-bluetooth-polyfill#readme",
   "devDependencies": {
-    "eslint": "^4.11.0",
+    "eslint": "^4.18.2",
     "event-target-shim": "^2.0.0",
     "jest": "^21.2.1"
   }
