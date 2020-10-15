@@ -4,9 +4,11 @@ The Polyfill enables Web Bluetooth in Chrome on Windows 10.
 
 [![Build Status](https://travis-ci.org/urish/web-bluetooth-polyfill.png?branch=master)](https://travis-ci.org/urish/web-bluetooth-polyfill)
 
-## Depracted - Use Chrome Canary instead
+## Depracted - Web Bluetooth is now available in Chrome
 
-Native Web Bluetooth support is [now available](https://github.com/WebBluetoothCG/web-bluetooth/blob/master/implementation-status.md#chrome) on Windows in [Chrome Canary](https://www.google.com/chrome/canary/). This polyfill is now deprecated.
+Native Web Bluetooth support is [now available on Chrome for Windows](https://github.com/WebBluetoothCG/web-bluetooth/blob/master/implementation-status.md#chrome).
+
+**This polyfill is no longer required and is now deprecated.**
 
 ## Installation
 
