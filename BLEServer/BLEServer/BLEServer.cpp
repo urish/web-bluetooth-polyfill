@@ -9,6 +9,7 @@
 #include <Windows.Devices.Bluetooth.h>
 #include <Windows.Devices.Bluetooth.Advertisement.h>
 #include <Windows.Data.JSON.h>
+#include <Windows.Storage.Streams.h>
 #include <wrl/wrappers/corewrappers.h>
 #include <wrl/event.h>
 #include <collection.h>
@@ -453,6 +454,28 @@ int main(Array<String^>^ args) {
 		msg->Insert("timestamp", JsonValue::CreateNumberValue((double)eventArgs->Timestamp.UniversalTime / 10000.0 + 11644480800000));
 		msg->Insert("advType", JsonValue::CreateStringValue(eventArgs->AdvertisementType.ToString()));
 		msg->Insert("localName", JsonValue::CreateStringValue(eventArgs->Advertisement->LocalName));
+
+		// Serialise the individual raw AD structures as arrays of bytes in JSON
+		// The AD structures concatenated should contain the entire raw payload of the advertisement
+		// The entire payload is sent as JSON just in case we need other stuff in the future
+		auto adStructures = ref new JsonArray();
+		for (auto& rawAdStructure : eventArgs->Advertisement->DataSections) {
+			auto adStructure = ref new JsonObject();
+			adStructure->Insert("type", JsonValue::CreateNumberValue(rawAdStructure->DataType));
+
+			auto adData = ref new JsonArray();
+			auto rawData = rawAdStructure->Data;
+
+			auto dataReader = Windows::Storage::Streams::DataReader::FromBuffer(rawData);
+			while (dataReader->UnconsumedBufferLength > 0) {
+				auto byte = dataReader->ReadByte();
+				adData->Append(JsonValue::CreateNumberValue(byte));
+			}
+
+			adStructure->Insert("data", adData);
+			adStructures->Append(adStructure);
+		}
+		msg->Insert("adStructures", adStructures);
 
 		JsonArray^ serviceUuids = ref new JsonArray();
 		for (unsigned int i = 0; i < eventArgs->Advertisement->ServiceUuids->Size; i++) {

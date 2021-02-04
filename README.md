@@ -1,3 +1,15 @@
+# VIVI SPECIFIC NOTES
+
+The `BLEServer` executable is required for the proper operation fo `noble-winrt`. Hopefully, this becomes obsolete with the implementation of the Chrome web bluetooth API, but for now, the web bluetooth API does not allow for a BLE scan of multiple devices. That means that we can only see the information for one box at a time.
+
+When a device advertises with BLE, the payload contains a number of "AD structures". AD structures contain data such as the name of a device, the signal strength, and manufacturer data. In the unmodified version of `web-bluetooth-polyfill`, only a select few AD structures are read, including the name, transmission power, and service UUIDs. This means that it does not read our "service data" AD structure that contains the beacon information.
+
+This mirror of `web-bluetooth-polyfill` contains a patch that dumps the raw data of all the AD structures when it discovers a bluetooth peripheral. This allows us to parse this data in javascript to retrieve the relevant information.
+
+To use this repository, build the `BLEserver` executable (`BLEServer.vcxproj`) using visual studio or `msbuild` and copy the executable into the `prebuilt` folder of the vivi `noble-winrt` repository.
+
+If you have any trouble with visual studio not being able to find `platform.winrt`, then make sure that the `Additional #using directories` is correct. The setting can be found in the `BLEServer` project under `C/C++` general settings.
+
 # Windows 10 Web Bluetooth Polyfill
 
 The Polyfill enables Web Bluetooth in Chrome on Windows 10. 
